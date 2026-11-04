@@ -15,7 +15,7 @@
 <style>
 :root{
   --bg:#031528; --panel:#0e2640; --panel2:#143355; --line:#24476e; --text:#e6eef8; --muted:#8fa8c4;
-  --accent:#2a7bc4; --accent2:#3b94e3; --warn:#e5534b; --ok:#3fb27f;
+  --chip-h:28px; --accent:#2a7bc4; --accent2:#3b94e3; --warn:#e5534b; --ok:#3fb27f;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 "Inter","Segoe UI",system-ui,sans-serif}
@@ -70,16 +70,16 @@ button:disabled{opacity:.35;cursor:not-allowed}
 /* layout */
 .cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
 .right{position:sticky;top:calc(var(--hh,60px) + 12px);max-height:calc(100vh - var(--hh,60px) - 24px);overflow:auto}
-@media(max-width:960px){.cols{grid-template-columns:1fr}.right{position:static;max-height:none}}
+@media(max-width:960px){.cols{grid-template-columns:minmax(0,1fr)}.right{position:static;max-height:none}}
 
 /* tags */
 .tagbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .tagbar input{width:260px;max-width:100%}
 .taglist{display:flex;flex-wrap:wrap;gap:8px}
-.tagchip{display:inline-flex;align-items:center;gap:6px;padding:3px 6px 3px 11px;border-radius:99px;font-size:13px;
+.tagchip{display:inline-flex;align-items:center;gap:4px;height:var(--chip-h);padding:0 4px 0 12px;border-radius:99px;font-size:13px;line-height:1;
   background:hsl(var(--h) 55% 28%);border:1px solid hsl(var(--h) 55% 45%)}
 .tagchip b{font-weight:600;opacity:.8}
-.tagchip button{padding:0 6px;border:none;background:transparent;color:inherit;opacity:.7;font-size:14px}
+.tagchip button{min-width:24px;width:24px;height:24px;min-height:0;padding:0;border:none;border-radius:50%;background:transparent;color:inherit;opacity:.8;font-size:19px;line-height:1}
 @media(hover:hover){.tagchip button:hover{opacity:1}}
 
 /* search */
@@ -149,15 +149,15 @@ button:disabled{opacity:.35;cursor:not-allowed}
 @media(hover:hover){.rinfo .name:hover{color:var(--accent2);text-decoration:underline;white-space:normal;overflow:visible}}
 .rinfo .meta{display:block;color:var(--muted);font-size:12px}
 .rtags{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
-.ctag{display:inline-flex;align-items:center;padding:1px 9px;font-size:12px;border-radius:99px;color:#fff;
+.ctag{display:inline-flex;align-items:center;height:var(--chip-h);padding:0 10px;font-size:12.5px;line-height:1;border-radius:99px;color:#fff;
   background:hsl(var(--h) 55% 32%);border:1px solid hsl(var(--h) 60% 55%)}
-.ctag button{width:0;overflow:hidden;padding:0;margin:0;border:none;background:transparent;color:#fff;font-size:14px;line-height:1;opacity:0;transition:width .12s,opacity .12s,margin .12s}
-@media(hover:hover){.ctag:hover button{width:14px;opacity:1;margin-left:4px}}
-@media(hover:none){.ctag button{width:14px;opacity:1;margin-left:4px}}
+.ctag button{width:0;min-height:0;height:24px;overflow:hidden;padding:0;margin:0;border:none;background:transparent;color:#fff;font-size:19px;line-height:1;opacity:0;transition:width .12s,opacity .12s,margin .12s}
+@media(hover:hover){.ctag:hover button{width:22px;opacity:1;margin-left:2px}}
+@media(hover:none){.ctag{padding-right:3px}.ctag button{width:24px;opacity:1;margin-left:2px}}
 .rctl{display:grid;grid-template-columns:40px;grid-template-rows:1fr 1fr;gap:4px;flex:none;align-self:stretch;margin-left:auto}
 .gimg{position:relative}
 .gbar{display:flex;justify-content:center;gap:4px;margin-top:6px}
-.gbar button{flex:none;width:30px;height:26px;padding:0;line-height:1;font-size:17px;font-weight:700;color:#fff;background:#1d6a9c;border:1px solid #2f86bb;border-radius:6px}
+.gbar button{flex:none;width:34px;height:28px;padding:0;line-height:1;font-size:17px;font-weight:700;color:#fff;background:#1d6a9c;border:1px solid #2f86bb;border-radius:6px}
 @media(hover:hover){.gbar button:hover{background:#2680b6;border-color:#3d97cc}}
 .gbar button:disabled{cursor:not-allowed}
 .tagmode .gbar{opacity:.3;pointer-events:none}
@@ -175,26 +175,26 @@ button:disabled{opacity:.35;cursor:not-allowed}
 .gcard.tm-on img{outline:3px solid var(--accent2);outline-offset:-3px}
 .tmchk{position:absolute;top:4px;right:4px;z-index:2;width:20px;height:20px;border-radius:50%;background:var(--accent2);color:#06121f;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.6)}
 .gcard img{width:100%;aspect-ratio:421/614;object-fit:cover;display:block;border-radius:4px;background:#08203a;box-shadow:0 2px 8px rgba(0,0,0,.5)}
-.badge{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);min-width:42px;text-align:center;font-weight:800;font-size:18px;line-height:1;color:#fff;
-  background:linear-gradient(#3d2c14,#1a1208);border:2px solid #e2b246;border-radius:8px;padding:4px 10px;text-shadow:0 1px 2px #000;box-shadow:0 2px 6px rgba(0,0,0,.7)}
+.badge{position:absolute;left:50%;bottom:3%;transform:translateX(-50%);width:88%;height:20%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;line-height:1;color:#fff;
+  background:linear-gradient(#3d2c14,#1a1208);border:2px solid #e2b246;border-radius:8px;padding:0;text-shadow:0 1px 2px #000;box-shadow:0 2px 6px rgba(0,0,0,.7)}
 .gtitle{margin:0 0 8px;font-size:15px;font-weight:700}
 .gzone{position:relative;background:#091d33;border:1px solid var(--line);border-radius:10px;padding:12px 12px 8px;margin-bottom:16px}
 .gzone:last-child{margin-bottom:0}
 .gzone .grid{margin-bottom:0}
 .gghost{visibility:hidden}
 .gghost .gsp{width:100%;aspect-ratio:421/614}
-.gghost .gsp2{height:32px}
+.gghost .gsp2{height:34px}
 .gnone{position:absolute;left:0;right:0;top:calc(50% + 14px);transform:translateY(-50%);text-align:center;color:var(--muted);font-style:italic}
 
 /* modal */
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
-#modal .box{position:relative;background:var(--panel);border:1px solid var(--accent2);border-radius:12px;width:340px;max-width:100%;max-height:78vh;max-height:78dvh;overflow:hidden;display:flex;flex-direction:column;padding:16px 16px 14px}
+#modal .box{position:relative;background:var(--panel);border:1px solid var(--accent2);border-radius:12px;width:340px;max-width:100%;height:78vh;height:min(78dvh,620px);overflow:hidden;display:flex;flex-direction:column;padding:16px 16px 14px}
 #modal .mtop{flex:none}
 #modal .mimg{display:block;width:150px;aspect-ratio:421/614;margin:0 auto 10px;border-radius:6px}
 #modal .box.noimg .mt{padding-right:36px}
 #modal .desc{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;font-size:13.5px;line-height:1.5}
 #modalX{position:absolute;top:8px;right:8px;z-index:2;width:32px;height:32px;min-height:0;padding:0;border-radius:50%;font-size:14px;line-height:1;display:grid;place-items:center}
-@media(max-height:560px){#modal .box{overflow:auto}#modal .desc{flex:none;overflow:visible}}
+@media(max-height:560px){#modal .box{height:92vh;height:92dvh}#modal .mimg{width:90px}}
 #tip{position:fixed;display:none;z-index:80;width:min(380px,calc(100vw - 16px));max-height:70vh;overflow:hidden;background:var(--panel);border:1px solid var(--accent2);border-radius:10px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.5);pointer-events:none}
 .tagchip .tm{cursor:pointer}
 .tagchip.on{outline:2px solid #fff;box-shadow:0 0 0 3px rgba(255,255,255,.25)}
@@ -272,8 +272,8 @@ body{-webkit-tap-highlight-color:transparent}
   section.panel{padding:10px;margin-bottom:12px}
   input[type=text],input[type=number],select,textarea{font-size:16px}
   button{min-height:38px}
-  .tagchip button{min-height:0;line-height:1;padding:2px 6px}
-  .tagchip{padding:2px 4px 2px 11px}
+  :root{--chip-h:30px}
+  .tagchip button,.ctag button{min-height:0}
   .dbrow{gap:8px}
   .fld{min-width:0;flex:1 1 100%}
   .dbrow + .dbrow > button{flex:1 1 calc(25% - 8px);padding:6px 4px}
@@ -297,10 +297,10 @@ body{-webkit-tap-highlight-color:transparent}
   .mv,.rm{min-height:0}
   .grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
   .gzone{padding:8px 8px 6px;margin-bottom:12px}
-  .gbar{gap:3px;margin-top:4px;justify-content:center}
-  .gbar button{flex:none;width:28px;min-width:0;height:26px;min-height:0;font-size:16px}
-  .gghost .gsp2{height:30px}
-  .badge{min-width:26px;font-size:11px;padding:2px 5px;border-width:1px;border-radius:6px;bottom:3px}
+  .gbar{gap:3px;margin-top:4px}
+  .gbar button{flex:1 1 0;width:auto;min-width:0;height:30px;min-height:0;font-size:18px}
+  .gghost .gsp2{height:34px}
+  .badge{font-size:13px;border-width:1px;border-radius:5px;bottom:3%}
   .gban{width:20px;height:20px;font-size:12px;left:2px;top:2px;border-width:1px;text-shadow:none}
   .tmchk{width:16px;height:16px;font-size:11px;top:2px;right:2px}
   .simgrid{gap:5px}
@@ -311,6 +311,7 @@ body{-webkit-tap-highlight-color:transparent}
   .otbl td{padding:8px 6px}
   .otbl td.bar{display:none}
 }
+@media(hover:none){input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea{font-size:16px!important}}
 #selSheet{display:none;position:fixed;inset:0;z-index:65;background:rgba(0,0,0,.55);align-items:flex-end}
 #selSheet.open{display:flex}
 #selSheet .sheet{width:100%;max-height:70vh;overflow:auto;background:#1b1f2a;border-radius:16px 16px 0 0;padding:8px 0 calc(12px + env(safe-area-inset-bottom));box-shadow:0 -6px 24px rgba(0,0,0,.5)}
@@ -900,7 +901,7 @@ function rowHTML(e, showTags) {
       `<span class="ctag" style="--h:${hue(t)}">${esc(t)}<button data-act="untag" data-tag="${esc(t)}" title="Remove tag">×</button></span>`).join('')}</div>` : '';
   }
   return `<div class="row${showTags && tagMode && e.tags.includes(tagMode) ? ' hastag' : ''}" data-key="${esc(e.key)}">
-    <div class="tw"><div class="ti"><img class="thumb" data-cid="${c.id}" data-url="${esc(c.img)}" alt=""><span class="tq" title="Copies in the deck">${e.qty}x</span></div><div class="dots${e.qty >= 3 ? ' max' : ''}">${'<i></i>'.repeat(Math.min(e.qty, 3))}</div></div>
+    <div class="tw"><div class="ti"><img class="thumb" data-cid="${c.id}" data-url="${esc(c.img)}" alt=""><span class="tq" title="Copies in the deck">${e.qty}</span></div><div class="dots${e.qty >= 3 ? ' max' : ''}">${'<i></i>'.repeat(Math.min(e.qty, 3))}</div></div>
     <div class="rinfo"><span class="name" data-act="detail">${esc(c.name)}</span><span class="meta">${esc(typeLabel(c))}${banBadge(c, true)}</span>${chips}</div>
     <div class="rctl">
       ${sel}
