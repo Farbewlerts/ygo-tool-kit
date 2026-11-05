@@ -173,8 +173,8 @@ button:disabled{opacity:.35;cursor:not-allowed}
 .gcard.tm-on img{outline:3px solid var(--accent2);outline-offset:-3px}
 .tmchk{position:absolute;top:4px;right:4px;z-index:2;width:20px;height:20px;border-radius:50%;background:var(--accent2);color:#06121f;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.6)}
 .gcard img{width:100%;aspect-ratio:421/614;object-fit:cover;display:block;border-radius:4px;background:#08203a;box-shadow:0 2px 8px rgba(0,0,0,.5)}
-.badge{position:absolute;left:50%;bottom:3%;transform:translateX(-50%);width:88%;height:20%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;line-height:1;color:#fff;
-  background:linear-gradient(#3d2c14,#1a1208);border:2px solid #e2b246;border-radius:8px;padding:0;text-shadow:0 1px 2px #000;box-shadow:0 2px 6px rgba(0,0,0,.7)}
+.badge{position:absolute;left:50%;bottom:3%;transform:translateX(-50%);width:auto;height:20%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;line-height:1;color:#fff;
+  background:linear-gradient(#3d2c14,#1a1208);border:2px solid #e2b246;border-radius:8px;padding:0 9px;white-space:nowrap;text-shadow:0 1px 2px #000;box-shadow:0 2px 6px rgba(0,0,0,.7)}
 .gtitle{margin:0 0 8px;font-size:15px;font-weight:700}
 .gzone{position:relative;background:#091d33;border:1px solid var(--line);border-radius:10px;padding:12px 12px 8px;margin-bottom:16px}
 .gzone:last-child{margin-bottom:0}
@@ -225,7 +225,9 @@ button:disabled{opacity:.35;cursor:not-allowed}
 .orow input[type=number]{width:90px}
 .cond{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;margin-bottom:8px;background:#08203a;border:1px solid var(--line);border-radius:8px}
 .cond input[type=number]{width:80px}
-.cond .rm{margin-left:auto}
+.cond{position:relative}
+.cond.hasrm{padding-right:46px}
+.cond .rm{position:absolute;top:8px;right:8px;width:30px;height:30px;margin:0;border-radius:7px}
 .otbl{border-collapse:collapse;width:100%;margin-top:6px}
 .otbl td{padding:9px 10px;border-bottom:1px solid var(--line)}
 .otbl td.pc{text-align:right;font-weight:700;white-space:nowrap;width:90px}
@@ -296,7 +298,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
   .gbar button{position:relative;flex:none;width:26px;min-width:0;height:26px;min-height:0;font-size:17px}
   .gbar button::before{content:"";position:absolute;inset:-4px -1px -5px}
   .gghost .gsp2{height:32px}
-  .badge{font-size:13px;border-width:1px;border-radius:5px;bottom:3%}
+  .badge{font-size:13px;border-width:1px;border-radius:5px;bottom:3%;padding:0 5px}
   .gban{width:20px;height:20px;font-size:12px;left:2px;top:2px;border-width:1px;text-shadow:none}
   .tmchk{width:16px;height:16px;font-size:11px;top:2px;right:2px}
   .simgrid{gap:5px}
@@ -1732,7 +1734,7 @@ function oddsRender() {
   const tagOpts = c => tagsSorted().map(t => `<option value="${esc(t)}"${t === c.tag ? ' selected' : ''}>${esc(t)} (${deck.filter(x => x.includes(t)).length})</option>`).join('');
   body.innerHTML = `<div class="hint" style="margin-bottom:12px">Uses the Main Deck of the deck open in the Deck Builder (${deck.length} cards). The number next to each tag is how many cards in the deck carry it.</div>
     <div class="orow"><label for="oHand">Cards In Hand</label><input type="number" id="oHand" inputmode="numeric" pattern="[0-9]*" min="1" max="${deck.length}" value="${Number.isNaN(odds.hand) ? '' : odds.hand}"></div>
-    ${odds.conds.map((c, i) => `<div class="cond" data-ci="${i}">
+    ${odds.conds.map((c, i) => `<div class="cond${odds.conds.length > 1 ? ' hasrm' : ''}" data-ci="${i}">
       <span>I Want</span>
       <select data-f="op">${Object.entries(OPS).map(([k, v]) => `<option value="${k}"${k === c.op ? ' selected' : ''}>${v}</option>`).join('')}</select>
       <input type="number" data-f="n" inputmode="numeric" pattern="[0-9]*" min="0" value="${Number.isNaN(c.n) ? '' : c.n}">
