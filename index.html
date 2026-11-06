@@ -1592,8 +1592,8 @@ async function importKDE(file) {
   applyImported(baseName(file.name), items, names.filter(n => !cards.get(n)));
 }
 
-/* dropdown menus */
-const IMP_ACCEPT = { kde: '.pdf,application/pdf', ydk: 'text/plain,.txt,.ydk', json: '.json,application/json' };
+/* dropdown menus. ydk has NO accept filter: iOS has no type for .ydk, so any accept list greys the file out in Files */
+const IMP_ACCEPT = { kde: '.pdf,application/pdf', ydk: '', json: '.json,application/json' };
 let impKind = 'json';
 const closeDD = () => document.querySelectorAll('.ddmenu.open').forEach(m => m.classList.remove('open'));
 function runExport(kind) {
@@ -1610,7 +1610,7 @@ document.addEventListener('click', ev => {
   if (ex) { closeDD(); runExport(ex.dataset.exp); return; }
   const im = t.closest('[data-imp]');
   if (im && im.dataset.imp === 'clip') { closeDD(); $('#pasteTa').value = ''; $('#pasteBox').style.display = 'flex'; $('#pasteTa').focus(); return; }
-  if (im) { closeDD(); impKind = im.dataset.imp; $('#fileIn').accept = IMP_ACCEPT[impKind]; $('#fileIn').click(); }
+  if (im) { closeDD(); impKind = im.dataset.imp; const fi = $('#fileIn'), acc = IMP_ACCEPT[impKind]; if (acc) fi.setAttribute('accept', acc); else fi.removeAttribute('accept'); fi.click(); }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeDD(); $('#pasteBox').style.display = 'none'; } });
 $('#pasteCancel').addEventListener('click', () => $('#pasteBox').style.display = 'none');
