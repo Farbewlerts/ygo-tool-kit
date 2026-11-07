@@ -3,7 +3,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Goldfish</title>
 <style>
-:root{--bg:#0e1411;--mat:#14301f;--line:#2e5a3d;--ink:#e9efe6;--dim:#8fa597;--gold:#e0b84a;--red:#d65a4a;--cw:min(calc((100vw - 2*var(--pad) - 6*var(--gap) - 8px)/9.3),calc((100dvh - 150px)/6.1));--ch:calc(var(--cw)*1.46);--gap:6px;--pad:8px}
+:root{--bg:#0e1411;--mat:#14301f;--line:#2e5a3d;--ink:#e9efe6;--dim:#8fa597;--gold:#e0b84a;--red:#d65a4a;--cw:min(calc((100vw - 2*var(--pad) - 6*var(--gap) - 8px)/9.3),calc((100dvh - 150px)/6.1));--ch:calc(var(--cw)*1.46);--hw:clamp(var(--cw),calc((100vw - 40px)/6),100px);--hh:calc(var(--hw)*1.46);--gap:6px;--pad:8px}
 @media(prefers-color-scheme:light){:root{--bg:#e9eee6;--mat:#cfe3d0;--line:#6f9a7b;--ink:#15221a;--dim:#4d6657}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 img{-webkit-user-drag:none}
@@ -38,7 +38,8 @@ button.pri{background:var(--gold);color:#201a05;border-color:var(--gold);font-we
 .card.sel{outline:3px solid var(--gold);z-index:3}
 .cnt{position:absolute;right:2px;bottom:2px;background:#000c;color:#fff;border-radius:9px;padding:0 6px;font-size:12px;z-index:2}
 .ls{position:absolute;left:2px;top:2px;z-index:2;min-height:0;padding:0 6px;font-size:13px;line-height:20px}
-#handw{flex:0 0 auto;margin:6px auto 0;width:min(100%,calc(2*var(--cw) + 5*var(--ch) + 6*var(--gap) + 2*var(--pad) + 2px));overflow-x:auto;padding:6px 8px;border:1px solid var(--line);border-radius:12px;min-height:calc(var(--ch) + 14px)}
+#handw{flex:0 0 auto;margin:6px auto 0;width:min(100%,calc(2*var(--cw) + 5*var(--ch) + 6*var(--gap) + 2*var(--pad) + 2px));overflow-x:auto;padding:6px 8px;border:1px solid var(--line);border-radius:12px;min-height:calc(var(--hh) + 14px)}
+#hand .card{width:var(--hw);height:var(--hh)}
 #hand{display:flex;gap:5px;width:max-content;margin:0 auto}
 #hand .card.sel{transform:translateY(-8px)}
 #mback{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;z-index:40}
@@ -56,7 +57,7 @@ button.pri{background:var(--gold);color:#201a05;border-color:var(--gold);font-we
 #log{position:fixed;right:8px;top:48px;width:min(300px,90vw);max-height:50dvh;overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px;display:none;font-size:12px;z-index:12}
 #log.on{display:block}
 #toast{position:fixed;left:50%;top:52px;transform:translateX(-50%);background:var(--red);color:#fff;padding:6px 12px;border-radius:16px;display:none;z-index:50;font-size:13px}
-@media(max-height:500px) and (orientation:landscape){:root{--cw:min(calc((100vw - 2*var(--pad) - 6*var(--gap) - 24px)/9.3),calc((100dvh - 104px)/5.9));--gap:4px;--pad:6px}
+@media(max-height:500px) and (orientation:landscape){:root{--cw:min(calc((100vw - 2*var(--pad) - 6*var(--gap) - 24px)/9.3),calc((100dvh - 104px)/5.9));--hw:var(--cw);--gap:4px;--pad:6px}
 header{padding:4px 8px}header b{display:none}button{min-height:32px;padding:5px 9px}#handw{margin-top:4px;padding:4px 6px}
 #menu{width:min(460px,90vw)}.ml{display:grid;grid-template-columns:1fr 1fr}.ml button{min-height:36px}#log{top:44px;left:8px;right:auto}}
 @media(hover:hover) and (min-width:900px){:root{--gap:10px;--pad:14px}}
