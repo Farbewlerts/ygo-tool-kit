@@ -1,11 +1,12 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Goldfish</title>
 <style>
-:root{--bg:#0e1411;--mat:#14301f;--line:#2e5a3d;--ink:#e9efe6;--dim:#8fa597;--gold:#e0b84a;--red:#d65a4a;--cw:min(calc((100vw - 20px)/7.5),calc((100dvh - 150px)/6.1));--ch:calc(var(--cw)*1.46);--gap:6px;--pad:8px}
+:root{--bg:#0e1411;--mat:#14301f;--line:#2e5a3d;--ink:#e9efe6;--dim:#8fa597;--gold:#e0b84a;--red:#d65a4a;--cw:min(calc((100vw - 2*var(--pad) - 6*var(--gap) - 8px)/9.3),calc((100dvh - 150px)/6.1));--ch:calc(var(--cw)*1.46);--gap:6px;--pad:8px}
 @media(prefers-color-scheme:light){:root{--bg:#e9eee6;--mat:#cfe3d0;--line:#6f9a7b;--ink:#15221a;--dim:#4d6657}}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+img{-webkit-user-drag:none}
 html,body{height:100%;margin:0}
 body{background:var(--bg);color:var(--ink);font:14px/1.3 system-ui,-apple-system,sans-serif;display:flex;flex-direction:column;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);overflow:hidden;touch-action:manipulation}
 header{display:flex;gap:6px;align-items:center;padding:6px 8px;flex-wrap:nowrap;overflow-x:auto}
@@ -13,42 +14,51 @@ header b{color:var(--gold);letter-spacing:.06em;margin-right:6px;white-space:now
 button{font:inherit;color:var(--ink);background:#ffffff14;border:1px solid var(--line);border-radius:8px;padding:7px 11px;min-height:36px;white-space:nowrap;cursor:pointer}
 button:active{background:#ffffff30}
 button.pri{background:var(--gold);color:#201a05;border-color:var(--gold);font-weight:600}
-#mat{flex:0 0 auto;margin:0 auto;padding:var(--pad);display:grid;grid-template-columns:repeat(7,var(--cw));grid-auto-rows:var(--ch);gap:var(--gap);background:var(--mat);border:1px solid var(--line);border-radius:12px}
+#mat{flex:0 0 auto;margin:0 auto;padding:var(--pad);display:grid;grid-template-columns:var(--cw) repeat(5,var(--ch)) var(--cw);grid-auto-rows:var(--ch);gap:var(--gap);background:var(--mat);border:1px solid var(--line);border-radius:12px}
 .z{position:relative;border:1px solid var(--line);border-radius:4px;display:flex;align-items:center;justify-content:center;color:var(--dim)}
 .lb{position:absolute;bottom:3px;left:0;right:0;text-align:center;font-size:clamp(8px,calc(var(--cw)*.2),12px);letter-spacing:.04em;pointer-events:none}
-.gem{position:absolute;top:30%;width:42%;opacity:.9;pointer-events:none}
+.gem{position:absolute;top:30%;left:50%;transform:translateX(-50%);width:calc(var(--cw)*.42);opacity:.9;pointer-events:none}
 .pile.op{cursor:pointer}
 .ban{width:var(--ch);height:var(--cw);justify-self:end;align-self:start}.ban .card{transform:rotate(90deg)}
+.z.dual,.z.sq{border:0}
+.z.dual::before,.z.dual::after,.z.sq::before{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border:1px solid var(--line);border-radius:4px;pointer-events:none}
+.z.dual::before,.z.sq::before{width:var(--cw);height:var(--ch)}
+.z.dual::after{width:var(--ch);height:var(--cw)}
+.z.emz::before,.z.emz::after{border-color:#7a8fd6}
+.z.dual.tgt,.z.sq.tgt{box-shadow:none}
+.z.dual.tgt::before,.z.dual.tgt::after,.z.sq.tgt::before{border-color:var(--gold);box-shadow:0 0 0 2px #e0b84a55}
 .z.tgt{border-color:var(--gold);border-style:solid;box-shadow:0 0 0 2px #e0b84a55;color:var(--gold)}
 .z.emz{border-color:#7a8fd6}
 .card{position:relative;width:var(--cw);height:var(--ch);border-radius:4px;background:#222 center/cover;box-shadow:0 1px 3px #0009;cursor:pointer;overflow:hidden;flex:0 0 auto;transition:transform .15s}
 .card img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
 .card .nm{position:absolute;inset:0;padding:3px;font-size:9px;line-height:1.1;color:#fff;background:#2a2f3a;overflow:hidden}
 .card.back{background:repeating-linear-gradient(45deg,#4a2c14 0 6px,#6b4020 6px 12px);border:2px solid #b98a4a}
-.card.def{transform:rotate(90deg) scale(.685)}
+.card.def{transform:rotate(90deg);z-index:2}
+.card.back>*{display:none}
 .card.sel{outline:3px solid var(--gold);z-index:3}
 .cnt{position:absolute;right:2px;bottom:2px;background:#000c;color:#fff;border-radius:9px;padding:0 6px;font-size:12px;z-index:2}
 .ls{position:absolute;left:2px;top:2px;z-index:2;min-height:0;padding:0 6px;font-size:13px;line-height:20px}
-#handw{flex:0 0 auto;margin:6px auto 0;width:min(100%,calc(7*var(--cw) + 6*var(--gap) + 2*var(--pad) + 2px));overflow-x:auto;padding:6px 8px;border:1px solid var(--line);border-radius:12px;min-height:calc(var(--ch) + 14px)}
+#handw{flex:0 0 auto;margin:6px auto 0;width:min(100%,calc(2*var(--cw) + 5*var(--ch) + 6*var(--gap) + 2*var(--pad) + 2px));overflow-x:auto;padding:6px 8px;border:1px solid var(--line);border-radius:12px;min-height:calc(var(--ch) + 14px)}
 #hand{display:flex;gap:5px;width:max-content;margin:0 auto}
 #hand .card.sel{transform:translateY(-8px)}
-#menu{position:fixed;display:none;grid-template-columns:repeat(3,64px);gap:5px;padding:6px;background:var(--bg);border:1px solid var(--gold);border-radius:10px;z-index:40;box-shadow:0 4px 16px #000a}
-#menu button{min-height:36px;padding:0}
-#info{position:fixed;left:8px;right:8px;bottom:64px;max-height:34dvh;overflow:auto;background:var(--bg);border:1px solid var(--gold);border-radius:10px;padding:10px;display:none;z-index:41;font-size:13px}
-#info.on{display:block}
-#info h4{margin:0 0 4px;color:var(--gold)}
+#mback{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;z-index:40}
+#menu{background:var(--bg);border:1px solid var(--gold);border-radius:14px;width:min(320px,88vw);max-height:88dvh;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:6px;box-shadow:0 8px 30px #000b}
+.mh{color:var(--gold);font-weight:600;padding:2px 4px 6px;border-bottom:1px solid var(--line)}
+.mi{font-size:13px;max-height:30dvh;overflow:auto;padding:4px}
+.ml{display:flex;flex-direction:column;gap:5px}
+.ml button{text-align:left;min-height:42px;padding:0 14px;font-size:15px}
 #sheet{position:fixed;inset:0;background:#000a;display:none;align-items:flex-end;justify-content:center;z-index:20}
 #sheet.on{display:flex}
 #sheet>div{background:var(--bg);width:min(600px,100%);max-height:78dvh;border-radius:14px 14px 0 0;padding:10px;display:flex;flex-direction:column;gap:8px}
 #sheet h4{margin:0;color:var(--gold)}
 #rows{overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:8px;align-content:start}
-.g{position:relative}.g .card{width:100%;height:auto;aspect-ratio:59/86}.g .cnt{top:3px;right:3px;bottom:auto;font-size:13px;padding:1px 7px}
+.g{position:relative}.g .card{width:100%;height:auto;aspect-ratio:59/86}.g .cnt{right:0;bottom:0;top:auto;background:#000;color:#fff;font-size:clamp(18px,5.5vw,30px);font-weight:700;line-height:1.1;padding:2px 10px 2px 12px;border-radius:12px 0 4px 0}
 #log{position:fixed;right:8px;top:48px;width:min(300px,90vw);max-height:50dvh;overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px;display:none;font-size:12px;z-index:12}
 #log.on{display:block}
-#toast{position:fixed;left:50%;top:52px;transform:translateX(-50%);background:var(--red);color:#fff;padding:6px 12px;border-radius:16px;display:none;z-index:30;font-size:13px}
-@media(max-height:500px) and (orientation:landscape){:root{--cw:min(calc((100vw - 120px)/7.5),calc((100dvh - 104px)/5.9));--gap:4px;--pad:6px}
+#toast{position:fixed;left:50%;top:52px;transform:translateX(-50%);background:var(--red);color:#fff;padding:6px 12px;border-radius:16px;display:none;z-index:50;font-size:13px}
+@media(max-height:500px) and (orientation:landscape){:root{--cw:min(calc((100vw - 2*var(--pad) - 6*var(--gap) - 24px)/9.3),calc((100dvh - 104px)/5.9));--gap:4px;--pad:6px}
 header{padding:4px 8px}header b{display:none}button{min-height:32px;padding:5px 9px}#handw{margin-top:4px;padding:4px 6px}
-#info{left:8px;right:auto;top:44px;bottom:auto;width:min(260px,26vw);max-height:calc(100dvh - 60px)}#log{top:44px;left:8px;right:auto}}
+#menu{width:min(460px,90vw)}.ml{display:grid;grid-template-columns:1fr 1fr}.ml button{min-height:36px}#log{top:44px;left:8px;right:auto}}
 @media(hover:hover) and (min-width:900px){:root{--gap:10px;--pad:14px}}
 </style></head><body>
 <header><b>GOLDFISH</b>
@@ -56,12 +66,11 @@ header{padding:4px 8px}header b{display:none}button{min-height:32px;padding:5px 
 <input type="file" id="fi" accept=".json,application/json" hidden></header>
 <div id="mat"></div>
 <div id="handw"><div id="hand"></div></div>
-<div id="log"></div><div id="toast"></div><div id="info"></div>
-<div id="menu"></div>
+<div id="log"></div><div id="toast"></div><div id="mback"></div>
 <div id="sheet"><div><h4 id="st"></h4><div id="rows"></div><button data-a="close">Close</button></div></div>
 <script>
 const $=s=>document.querySelector(s), KEY='ygo-deck-builder-v1';
-let C={},Z,sel=null,hist=[],LOG=[],listZ=null,redo=[],scrollHand=false,deck0={main:[],extra:[]};
+let C={},Z,sel=null,hist=[],LOG=[],listZ=null,PL=null,menuStep='main',menuOn=false,infoOn=false,NODES={},redo=[],scrollHand=false,deck0={main:[],extra:[]};
 const SL={mz:5,st:5,emz:2},PILES=['deck','extra','gy','ban','field'];
 const NAMES={deck:'Deck',extra:'Extra',gy:'Graveyard',ban:'Banished',field:'Field',hand:'Hand',mz:'Monster',st:'Spell/Trap',emz:'Extra MZ'};
 const newZ=()=>({deck:[],hand:[],extra:[],gy:[],ban:[],field:[],mz:Array(5).fill(null),st:Array(5).fill(null),emz:Array(2).fill(null)});
@@ -71,7 +80,7 @@ function readDeck(){let s=null;try{s=JSON.parse(localStorage.getItem(KEY))}catch
  if(!s||!Array.isArray(s.entries)||!s.entries.length){s={entries:[]};for(let i=1;i<=30;i++)s.entries.push({zone:'main',qty:1,card:{id:i,name:'Demo Card '+i,type:i%3?'Effect Monster':'Spell Card',desc:'Placeholder. Load your deck.'}});for(let i=1;i<=5;i++)s.entries.push({zone:'extra',qty:1,card:{id:100+i,name:'Demo Extra '+i,type:'Fusion Monster',desc:''}})}
  return s}
 function setDeck(s){deck0={main:[],extra:[]};for(const e of s.entries){const z=e.zone==='extra'?'extra':e.zone==='main'?'main':null;if(!z)continue;for(let i=0;i<(e.qty||1);i++)deck0[z].push(e.card)}reset()}
-function reset(){C={};Z=newZ();let u=0;for(const c of deck0.main){C[++u]={c,pos:'u'};Z.deck.push(u)}for(const c of deck0.extra){C[++u]={c,pos:'u'};Z.extra.push(u)}shuffle(Z.deck);hist=[];redo=[];sel=null}
+function reset(){C={};NODES={};Z=newZ();let u=0;for(const c of deck0.main){C[++u]={c,pos:'u'};Z.deck.push(u)}for(const c of deck0.extra){C[++u]={c,pos:'u'};Z.extra.push(u)}shuffle(Z.deck);hist=[];redo=[];sel=null}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}}
 const cur=()=>JSON.stringify({Z,p:Object.fromEntries(Object.entries(C).map(([k,v])=>[k,v.pos]))});
 const snap=()=>{hist.push(cur());redo=[];if(hist.length>80)hist.shift()};
@@ -86,65 +95,88 @@ function put(u,z,i,top=true){ // move card u to zone z (slot i for mz/st/emz)
  const onF=!!SL[fz]||fz==='field';
  if(SL[z])Z[z][i]=u;else if(z==='field'){if(Z.field.length){const o=Z.field.pop();C[o].pos='u';Z.gy.push(o)}Z.field.push(u)}
  else if(z==='deck'&&!top)Z.deck.unshift(u);else if(z==='hand'){Z.hand.unshift(u);scrollHand=true}else Z[z].push(u);
- const dF=!!SL[z]||z==='field';if(!(dF&&onF))C[u].pos='u';
+ const dF=!!SL[z]||z==='field';C[u].pos=dF?(PL?PL.pos:(onF?C[u].pos:'u')):'u';PL=null;
  say(C[u].c.name+' → '+NAMES[z]+(z==='deck'?(top?' (top)':' (bottom)'):''));sel=null;draw()}
 function turn(u){const f=find(u);if(!f||!(SL[f[0]]||f[0]==='field'))return toast('Only on the field');const c=C[u];snap();
  const sl=f[0]==='mz'||f[0]==='emz';c.pos=sl?({u:'d',d:'f',f:'u'})[c.pos]:(c.pos==='u'?'f':'u');say('Turn '+C[u].c.name);draw()}
 function drawN(n){snap();for(let i=0;i<n&&Z.deck.length;i++){Z.hand.unshift(Z.deck.pop());scrollHand=true}say('Draw '+n);draw()}
-function cardEl(u,face,st){const o=C[u],c=o.c,fd=o.pos==='f'&&!face,dn=o.pos==='d'?' def':'',at=st?'':` draggable="true" data-u="${u}"`;
- if(fd)return`<div class="card back${dn}${sel===u?' sel':''}"${at}></div>`;
- return`<div class="card${dn}${sel===u?' sel':''}"${at}>${c.img?`<img src="${c.img}" alt="${c.name.replace(/"/g,'')}" onerror="this.outerHTML='<div class=nm>'+this.alt+'</div>';" loading="lazy">`:`<div class="nm">${c.name}</div>`}</div>`}
+const esc=x=>String(x??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+function cardNode(u,m){const k=u+m,o=C[u],c=o.c,ia=m!=='p';let n=NODES[k];
+ if(!n){n=NODES[k]=document.createElement('div');if(ia){n.draggable=true;n.dataset.u=u}
+  n.innerHTML=c.img?`<img src="${esc(c.img)}" alt="${esc(c.name)}" loading="lazy" onerror="var d=document.createElement('div');d.className='nm';d.textContent=this.alt;this.replaceWith(d)">`:`<div class="nm">${esc(c.name)}</div>`}
+ const hz=m==='b'&&(o.pos==='d'||(o.pos==='f'&&catOf(c)==='monster'&&(f=>f&&(f[0]==='mz'||f[0]==='emz'))(find(u))));
+ n.className='card'+(m==='b'&&o.pos==='f'?' back':'')+(hz?' def':'')+(ia&&sel===u?' sel':'');return n}
+const ph=(u,m)=>`<i data-hold="${u}${m}"></i>`;
+function fill(r){r.querySelectorAll('i[data-hold]').forEach(i=>{const h=i.dataset.hold;i.replaceWith(cardNode(+h.slice(0,-1),h.slice(-1)))})}
 const gem=c=>`<svg class="gem" viewBox="0 0 20 24"><polygon points="10,1 19,12 10,23 1,12" fill="${c}"/></svg>`;
-function slot(z,i,col,row,label,g){const u=Z[z][i];return`<div class="z${z==='emz'?' emz':''}${sel!=null&&u==null?' tgt':''}" data-z="${z}" data-i="${i}" style="grid-column:${col};grid-row:${row}">${u!=null?cardEl(u):(g?gem(g):'')+'<span class="lb">'+label+'</span>'}</div>`}
+/* same ordering as the toolkit */
+const FRAME_ORDER=['Normal','Effect','Fusion','Ritual','Synchro','Xyz','Pendulum','Link'],ATTRS=['LIGHT','DARK','WATER','FIRE','EARTH','WIND','DIVINE'];
+const RACES=['Spellcaster','Dragon','Zombie','Warrior','Beast-Warrior','Beast','Winged Beast','Machine','Fiend','Fairy','Insect','Dinosaur','Reptile','Fish','Sea Serpent','Aqua','Pyro','Thunder','Rock','Plant','Psychic','Wyrm','Cyberse','Divine-Beast','Illusion'];
+const ST_TYPES=[['spell','Normal'],['spell','Field'],['spell','Equip'],['spell','Continuous'],['spell','Quick-Play'],['spell','Ritual'],['trap','Normal'],['trap','Continuous'],['trap','Counter']];
+const catOf=c=>(c.type||'').includes('Spell')?'spell':(c.type||'').includes('Trap')?'trap':'monster';
+const frameName=c=>{const t=c.type||'';return t.includes('Link')?'Link':t.includes('XYZ')?'Xyz':t.includes('Synchro')?'Synchro':t.includes('Fusion')?'Fusion':t.includes('Ritual')?'Ritual':t.includes('Pendulum')?'Pendulum':t.includes('Normal')?'Normal':'Effect'};
+function sortKey(c){const k=catOf(c);if(k==='monster')return[0,FRAME_ORDER.indexOf(frameName(c)),c.level||0,RACES.indexOf(c.race),c.atk??-1,ATTRS.indexOf(c.attribute)];return[k==='spell'?1:2,ST_TYPES.findIndex(t=>t[0]===k&&t[1]===c.race),0,0,0,0]}
+function cmpC(a,b){const x=sortKey(a),y=sortKey(b);for(let i=0;i<x.length;i++)if(x[i]!==y[i])return x[i]-y[i];return a.name.localeCompare(b.name)}
+function legal(u,z,i){const c=C[u].c,k=catOf(c);if(PL&&PL.pend)return z==='st'&&(i===0||i===4);
+ if(k==='monster')return z==='mz'||z==='emz';if(k==='spell'&&c.race==='Field')return z==='field';return z==='st'}
+const canP=(z,i)=>sel!=null&&!menuOn&&Z[z][i]==null&&legal(sel,z,i);
+function slot(z,i,col,row,label,g){const u=Z[z][i];return`<div class="z ${z==='st'?'sq':'dual'}${z==='emz'?' emz':''}${canP(z,i)?' tgt':''}" data-z="${z}" data-i="${i}" style="grid-column:${col};grid-row:${row}">${u!=null?ph(u,'b'):(g?gem(g):'')+'<span class="lb">'+label+'</span>'}</div>`}
 function pile(z,col,row,lab,cls=''){const a=Z[z],n=a.length,top=a[n-1];
- const body=n?(z==='deck'||z==='extra'?'<div class="card back"></div>':cardEl(top,true,1)):`<span class="lb">${lab}</span>`;
- return`<div class="z pile${cls}${sel!=null?' tgt':''}${n&&sel==null?' op':''}" data-z="${z}" style="grid-column:${col};grid-row:${row}">${body}${n?`<span class="cnt">${n}</span>`:''}</div>`}
+ const body=n?(z==='deck'||z==='extra'?'<div class="card back"></div>':ph(top,'p')):`<span class="lb">${lab}</span>`;
+ return`<div class="z pile${cls}${n&&sel==null?' op':''}" data-z="${z}" style="grid-column:${col};grid-row:${row}">${body}${n?`<span class="cnt">${n}</span>`:''}</div>`}
 function draw(){const fu=Z.field[0];
- let h=`<div class="z${sel!=null&&fu==null?' tgt':''}" data-z="field" style="grid-column:1;grid-row:2">${fu!=null?cardEl(fu):'<span class="lb">FIELD</span>'}</div>`;
+ let h=`<div class="z${fu==null&&sel!=null&&!menuOn&&legal(sel,'field',0)?' tgt':''}" data-z="field" style="grid-column:1;grid-row:2">${fu!=null?ph(fu,'b'):'<span class="lb">FIELD</span>'}</div>`;
  h+=pile('gy',7,2,'GY')+pile('ban','6/8',1,'BAN',' ban')+pile('extra',1,3,'EXTRA')+pile('deck',7,3,'DECK');
  for(let i=0;i<5;i++)h+=slot('mz',i,i+2,2,'MMZ')+slot('st',i,i+2,3,'S&TZ',i===0?'#3b9be8':i===4?'#d9304a':'');
  h+=slot('emz',0,3,1,'EMZ')+slot('emz',1,5,1,'EMZ');
- $('#mat').innerHTML=h;$('#hand').innerHTML=Z.hand.map(u=>cardEl(u,true)).join('');
+ $('#mat').innerHTML=h;fill($('#mat'));
+ $('#hand').innerHTML=Z.hand.map(u=>ph(u,'h')).join('');fill($('#hand'));
  if(scrollHand){$('#handw').scrollLeft=0;scrollHand=false}
- if($('#sheet').classList.contains('on'))rows();placeMenu()}
-function placeMenu(){const m=$('#menu');if(sel==null){m.style.display='none';$('#info').className='';return}
- const f=find(sel)||[],fl=SL[f[0]]||f[0]==='field',sh=$('#sheet').classList.contains('on');
- const it=[['info','Info'],fl&&['turn','Turn'],f[0]!=='hand'&&['hand','Hand'],f[0]!=='gy'&&['gy','GY'],f[0]!=='ban'&&['ban','BAN'],['dtop','Deck ▲'],['dbot','Deck ▼'],f[0]!=='extra'&&['extra','Extra'],sh&&['place','Place'],['x','✕']].filter(Boolean);
- m.innerHTML=it.map(([k,l])=>`<button data-m="${k}">${l}</button>`).join('');m.style.gridTemplateColumns=f[0]==='hand'?'repeat(5,54px)':'repeat(3,64px)';m.style.display='grid';
- const el=document.querySelector((sh?'#sheet ':'')+`[data-u="${sel}"]`);
- if(el){const r=el.getBoundingClientRect(),w=m.offsetWidth,h=m.offsetHeight,W=innerWidth,H=innerHeight,g=6;
-  const o=f[0]==='hand'?[[r.left+r.width/2-w/2,r.top-h-g],[r.left+r.width/2-w/2,r.bottom+g]]:[[r.right+g,r.top],[r.left-w-g,r.top],[r.left,r.top-h-g],[r.left,r.bottom+g]];
-  const p=o.find(([x,y])=>x>=0&&y>=0&&x+w<=W&&y+h<=H)||o[0];
-  m.style.left=Math.max(4,Math.min(W-w-4,p[0]))+'px';m.style.top=Math.max(4,Math.min(H-h-4,p[1]))+'px'}
- if($('#info').classList.contains('on'))info()}
-function info(){if(sel==null)return;const c=C[sel].c;$('#info').className='on';$('#info').innerHTML=`<h4>${c.name}</h4><div>${c.type||''}${c.race?' · '+c.race:''}${c.attribute?' · '+c.attribute:''}${c.level!=null?' · Lv'+c.level:''}${c.atk!=null?' · ATK '+c.atk:''}${c.def!=null?' / DEF '+c.def:''}</div><p>${(c.desc||'').replace(/\n/g,'<br>')}</p>`}
+ if($('#sheet').classList.contains('on'))rows();renderMenu()}
+function renderMenu(){const mb=$('#mback');if(sel==null||!menuOn){mb.style.display='none';return}
+ const f=find(sel)||[],fl=SL[f[0]]||f[0]==='field',c=C[sel].c,k=catOf(c);let body,inf='';
+ if(menuStep==='pos'){const pm=(c.type||'').includes('Pendulum');
+  const o=[fl&&['keep','Keep as is'],...(k==='monster'?[['u','Face-up ATK (vertical)'],['d','Face-up DEF (horizontal)'],['f','Face-down DEF (horizontal)']]:[['u','Face-up'],['f','Set (face-down)']]),k==='monster'&&pm&&['pend','Pendulum Zone (face-up)']].filter(Boolean);
+  body='<button data-m="back">‹ Back</button>'+o.map(([v,l])=>`<button data-m="pos:${v}">${l}</button>`).join('')}
+ else{const it=[['info',infoOn?'Hide info':'Info'],fl&&['turn','Turn / Flip'],['place',fl?'Move on field':'Place on field'],f[0]!=='hand'&&['hand','To Hand'],f[0]!=='gy'&&['gy','To Graveyard'],f[0]!=='ban'&&['ban','Banish'],['dtop','To Deck (top)'],['dbot','To Deck (bottom)'],f[0]!=='extra'&&['extra','To Extra Deck']].filter(Boolean);
+  body=it.map(([q,l])=>`<button data-m="${q}">${l}</button>`).join('');
+  if(infoOn)inf=`<div class="mi"><div>${esc(c.type)}${c.race?' · '+esc(c.race):''}${c.attribute?' · '+esc(c.attribute):''}${c.level!=null?' · Lv'+c.level:''}${c.atk!=null?' · ATK '+c.atk:''}${c.def!=null?' / DEF '+c.def:''}</div><p>${esc(c.desc).replace(/\n/g,'<br>')}</p></div>`}
+ mb.innerHTML=`<div id="menu"><div class="mh">${esc(c.name)}</div>${inf}<div class="ml">${body}</div></div>`;mb.style.display='flex'}
 function openList(z){if(!Z[z].length)return;listZ=z;$('#sheet').className='on';rows()}
 function rows(){const a=Z[listZ];if(!a.length){$('#sheet').className='';return}
- $('#st').textContent=NAMES[listZ]+' ('+a.length+')';const g={};
- for(const u of [...a].reverse())(g[C[u].c.name]=g[C[u].c.name]||[]).push(u);
- $('#rows').innerHTML=Object.values(g).map(us=>`<div class="g">${cardEl(us[0],true)}${us.length>1?`<span class="cnt">${us.length}x</span>`:''}</div>`).join('')}
-function zoneTap(z,i){if(sel==null){if(z!=='field'&&PILES.includes(z))openList(z);return}const f=find(sel);if(!f)return;if(SL[z]&&Z[z][i]!=null&&Z[z][i]!==sel)return toast('Slot is occupied');put(sel,z,i)}
+ $('#st').textContent=NAMES[listZ]+' ('+a.length+')';const g={},srt=listZ==='deck'||listZ==='extra';
+ for(const u of(srt?[...a]:[...a].reverse()))(g[C[u].c.name]=g[C[u].c.name]||[]).push(u);
+ const gs=Object.values(g);if(srt)gs.sort((p,q)=>cmpC(C[p[0]].c,C[q[0]].c));
+ $('#rows').innerHTML=gs.map(us=>`<div class="g">${ph(us[0],'s')}${us.length>1?`<span class="cnt">${us.length}</span>`:''}</div>`).join('');fill($('#rows'))}
+function zoneTap(z,i){if(sel==null){if(z!=='field'&&PILES.includes(z))openList(z);return}const f=find(sel);if(!f)return;if((SL[z]||z==='field')&&!legal(sel,z,i))return toast('Not for this card');
+ if(SL[z]&&Z[z][i]!=null&&Z[z][i]!==sel)return toast('Slot is occupied');put(sel,z,i)}
 document.addEventListener('click',e=>{const t=e.target;
  const a=t.closest('[data-a]');if(a){const k=a.dataset.a;
   if(k==='new'){$('#sheet').className='';reset();say('New hand');drawN(5)}else if(k==='draw')drawN(1);else if(k==='shuf'){snap();shuffle(Z.deck);say('Shuffle deck');toast('Deck shuffled')}
   else if(k==='undo')undo();else if(k==='redo')redoA();else if(k==='log')$('#log').classList.toggle('on');else if(k==='load')$('#fi').click();else if(k==='close'){$('#sheet').className='';sel=null;draw()}return}
  const m=t.closest('[data-m]');if(m){const k=m.dataset.m;
-  if(k==='info'){$('#info').classList.toggle('on');info()}else if(k==='x'){sel=null;$('#info').className='';draw()}
-  else if(k==='place'){$('#sheet').className='';draw()}else if(k==='turn')turn(sel);else put(sel,k==='dtop'||k==='dbot'?'deck':k,0,k!=='dbot');return}
+  if(k==='info'){infoOn=!infoOn;renderMenu()}
+  else if(k==='place'){menuStep='pos';renderMenu()}else if(k==='back'){menuStep='main';renderMenu()}
+  else if(k.startsWith('pos:')){const v=k.slice(4);PL=v==='pend'?{pos:'u',pend:1}:v==='keep'?{pos:C[sel].pos}:{pos:v};menuOn=false;menuStep='main';$('#sheet').className='';draw()}
+  else if(k==='turn'){turn(sel);sel=null;draw()}
+  else put(sel,k==='dtop'||k==='dbot'?'deck':k,0,k!=='dbot');return}
+ if(t.id==='mback'){sel=null;menuOn=false;draw();return}
  if(t.id==='sheet'){$('#sheet').className='';sel=null;draw();return}
- if(t.closest('#menu,#info'))return;
+ if(t.closest('#menu'))return;
  const c=t.closest('.card[data-u]');if(c){const u=+c.dataset.u,pz=c.closest('.z[data-z]');
-  if(sel===u)sel=null;else if(sel!=null&&pz){zoneTap(pz.dataset.z,+pz.dataset.i||0);return}else sel=u;
-  if(sel==null)$('#info').className='';draw();return}
- const z=t.closest('.z[data-z]');if(z)zoneTap(z.dataset.z,+z.dataset.i||0)});
+  if(sel===u){menuOn=true;menuStep='main'}else if(sel!=null&&pz){zoneTap(pz.dataset.z,+pz.dataset.i||0);return}else{sel=u;menuOn=true;infoOn=false;menuStep='main';PL=null}
+  draw();return}
+ const z=t.closest('.z[data-z]');if(z){zoneTap(z.dataset.z,+z.dataset.i||0);return}
+ if(sel!=null&&!menuOn&&!t.closest('header,#sheet')){sel=null;draw()}});
 $('#fi').addEventListener('change',async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const s=JSON.parse(await f.text());if(!Array.isArray(s.entries))throw 0;setDeck(s);say('Loaded '+(s.name||f.name));$('#sheet').className='';draw();drawN(5)}catch{toast('Could not read that file')}});
 let dragU=null;
-document.addEventListener('dragstart',e=>{const c=e.target.closest('.card[data-u]');if(!c)return;dragU=+c.dataset.u;sel=dragU;e.dataTransfer.setData('text/plain','c');e.dataTransfer.effectAllowed='move'});
+document.addEventListener('dragstart',e=>{const c=e.target.closest('.card[data-u]');if(!c)return;dragU=+c.dataset.u;sel=dragU;menuOn=false;PL=null;e.dataTransfer.setData('text/plain','c');e.dataTransfer.effectAllowed='move'});
 document.addEventListener('dragover',e=>{if(dragU!=null&&e.target.closest('.z[data-z],#handw'))e.preventDefault()});
 document.addEventListener('drop',e=>{if(dragU==null)return;e.preventDefault();const z=e.target.closest('.z[data-z]'),u=dragU;dragU=null;sel=u;
  if(z)zoneTap(z.dataset.z,+z.dataset.i||0);else if(e.target.closest('#handw'))put(u,'hand',0);else draw()});
 document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;const k=e.key.toLowerCase();
- if(k==='escape'){sel=null;$('#sheet').className='';draw()}else if(k==='y')redoA();else if(k==='d')drawN(1);else if(k==='s'){snap();shuffle(Z.deck);say('Shuffle deck');draw()}else if(k==='z')undo();
+ if(k==='escape'){sel=null;menuOn=false;$('#sheet').className='';draw()}else if(k==='y')redoA();else if(k==='d')drawN(1);else if(k==='s'){snap();shuffle(Z.deck);say('Shuffle deck');draw()}else if(k==='z')undo();
  else if(sel!=null){const mv={g:'gy',b:'ban',h:'hand',e:'extra'}[k];if(mv)put(sel,mv,0);else if(k==='t')turn(sel)}});
+['gesturestart','gesturechange','gestureend'].forEach(g=>document.addEventListener(g,e=>e.preventDefault()));
 setDeck(readDeck());draw();drawN(5);
 </script></body></html>
