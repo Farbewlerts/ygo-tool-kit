@@ -342,6 +342,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
 .cd.back{background:repeating-linear-gradient(135deg,#5a3418 0 8px,#3b2210 8px 16px);border:2px solid #c99a55}
 .cd.back img.fr{position:absolute;left:0;top:0;opacity:0;pointer-events:none;animation:fdb var(--fd) ease-in-out infinite}
 @keyframes fdb{0%,100%{opacity:0}50%{opacity:.6}}
+.cd.fu{box-shadow:0 0 0 2px #ffc928}
 .cd.fxa{animation:fxa var(--fx-a) ease-in-out 1;z-index:3}
 .cd.fxt{animation:fxt var(--fx-t) ease-out 2;z-index:3}
 .cd.fxt::after{content:'';position:absolute;inset:0;background:#ff3b30;opacity:0;pointer-events:none;animation:fxto var(--fx-t) ease-out 2}
@@ -2065,7 +2066,7 @@ function buildBoard() {
 }
 function zoneInner(z, i) {
   const a = S.Z[z];
-  if (PILES.includes(z)) { if (!a.length) return ''; return ((z === 'deck' || z === 'extra') ? '<div class="cd back"></div>' : cardEl(a[0])) + `<span class="cnt">${a.length}</span>`; }
+  if (PILES.includes(z)) { if (!a.length) return ''; const fu = z === 'extra' && a.find(x => S.P[x] === 'x'); return ((z === 'deck' || z === 'extra') ? (fu ? cardEl(fu, ' fu') : '<div class="cd back"></div>') : cardEl(a[0])) + `<span class="cnt">${a.length}</span>`; }
   return a[i] ? cardEl(a[i]) : '';
 }
 function applyFx() {
@@ -2123,11 +2124,12 @@ $('#soloMenu').addEventListener('click', e => { if (e.target.id === 'soloMenu') 
 function openList(z) {
   const a = S.Z[z]; if (!a.length) { closeList(); return; }
   const stack = z === 'deck' || z === 'extra';
-  S.list = z; const us = a.slice(); if (stack) us.sort(srt);
+  S.list = z; const us = a.slice(); if (stack) us.sort((p, q) => ((S.P[q] === 'x') - (S.P[p] === 'x')) || srt(p, q));
   const g = [], seen = {};
-  us.forEach(u => { if (stack && seen[cc(u).id] !== undefined) g[seen[cc(u).id]].n++; else { if (stack) seen[cc(u).id] = g.length; g.push({ u, n: 1 }); } });
+  const K = u => cc(u).id + (S.P[u] === 'x' ? 'x' : '');
+  us.forEach(u => { if (stack && seen[K(u)] !== undefined) g[seen[K(u)]].n++; else { if (stack) seen[K(u)] = g.length; g.push({ u, n: 1 }); } });
   $('#slh').innerHTML = `${esc(NAMES[z])} (${a.length})<button class="sx" data-x="1" aria-label="Close">✕</button>`;
-  sync($('#slg'), g.map(o => ({ k: o.u, h: `<div class="lt" data-u="${o.u}">${cardEl(o.u)}${o.n > 1 ? `<span class="cnt">${o.n}</span>` : ''}</div>` })));
+  sync($('#slg'), g.map(o => ({ k: o.u, h: `<div class="lt" data-u="${o.u}">${cardEl(o.u, S.P[o.u] === 'x' ? ' fu' : '')}${o.n > 1 ? `<span class="cnt">${o.n}</span>` : ''}</div>` })));
   $('#soloList').classList.add('on'); phase();
 }
 function closeList() { S.list = null; $('#soloList').classList.remove('on'); }
@@ -2146,7 +2148,7 @@ $('#soloLog').addEventListener('click', e => { if (e.target.id === 'soloLog' || 
 function toZone(u, to, pos, verb) {
   const c = cc(u), L = remove(u), a = S.Z;
   if (to === 'hand') a.hand.unshift(u); else if (to === 'gy') a.gy.unshift(u); else if (to === 'ban') a.ban.unshift(u);
-  else if (to === 'dtop') a.deck.unshift(u); else if (to === 'dbot') a.deck.push(u); else if (to === 'extra') a.extra.push(u);
+  else if (to === 'dtop') a.deck.unshift(u); else if (to === 'dbot') a.deck.push(u); else if (to === 'extra') a.extra[pos === 'x' ? 'unshift' : 'push'](u);
   S.P[u] = pos || 'u';
   commit(`${verb}: ${c.name} [${zn(L)}]`);
 }
@@ -2154,7 +2156,29 @@ function put(u, z, i, pos, verb) {
   const L = remove(u); S.Z[z][i] = u; S.P[u] = pos;
   commit(`${verb}: ${cc(u).name} [${zn(L)} → ${NAMES[z]}${['mmz', 'stz', 'emz'].includes(z) ? i + 1 : ''}]`);
 }
-function fx(u, t) { S.fx = { u, t, fresh: true }; commit(`${t === 'a' ? 'Activate Effect' : 'Target'}: ${cc(u).name} [${zn(find(u))}]`); }
+function fx(u, t) {
+  const L = find(u);
+  if (L && (L.z === 'gy' || L.z === 'ban') && L.i > 0) { S.Z[L.z].splice(L.i, 1); S.Z[L.z].unshift(u); }   // a card chosen from GY/BAN goes to the top first
+  closeList(); S.fx = { u, t, fresh: true }; commit(`${t === 'a' ? 'Activate Effect' : 'Target'}: ${cc(u).name} [${zn(find(u))}]`);
+}
+function reveal(u) {
+  const L = find(u), c = cc(u); closeList(); commit(`Reveal: ${c.name} [${zn(L)}]`);
+  setTimeout(() => {
+    const hand = L.z === 'hand', src = hand ? $('#soloHand').querySelector(`.cd[data-u="${u}"]`) : pane.querySelector(`.sz[data-z="${L.z}"] .zc`);
+    if (!src) return;
+    const r = src.getBoundingClientRect(), hh = r.width * 1.46, H = Math.min(innerHeight * .7, 440), s = (H / 1.46) / r.width;
+    const dx = innerWidth / 2 - (r.left + r.width / 2), dy = innerHeight / 2 - (r.top + hh / 2), mid = `translate(${dx}px,${dy}px) scale(${s})`;
+    const bg = document.createElement('div'); bg.style.cssText = 'position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.45);opacity:0';
+    const im = document.createElement('img'); im.src = srcOf(c); im.draggable = false;
+    im.style.cssText = `position:fixed;z-index:61;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${hh}px;border-radius:4px;pointer-events:none`;
+    const g = a => `0 0 ${a}px ${a / 4}px rgba(255,201,40,.8)`;
+    document.body.append(bg, im); if (hand) src.style.visibility = 'hidden';
+    const a = im.animate([{ transform: 'none', boxShadow: '0 0 0 0 rgba(255,201,40,0)', easing: 'ease-out' }, { transform: mid, boxShadow: g(26), offset: .22 }, { transform: mid, boxShadow: g(12), offset: .5 }, { transform: mid, boxShadow: g(26), offset: .78, easing: 'ease-in' }, { transform: 'none', boxShadow: '0 0 0 0 rgba(255,201,40,0)' }], { duration: 1600 });
+    bg.animate([{ opacity: 0 }, { opacity: 1, offset: .22 }, { opacity: 1, offset: .78 }, { opacity: 0 }], { duration: 1600 });
+    const done = () => { bg.remove(); im.remove(); src.style.visibility = ''; };
+    a.onfinish = a.oncancel = done; bg.addEventListener('click', () => a.finish());
+  }, 100);
+}
 // Positions depend on the zone, not on the card type: any card can sit in a Monster Zone or a Spell & Trap Zone.
 function posOpts(c, z) { return (z === 'mmz' || z === 'emz') ? [['Face-up ATK', 'u'], ['Face-up DEF', 'd'], ['Face-down DEF', 'f']] : [['Face-up', 'u'], ['Set', 's']]; }
 function banMenu(u, back) {
@@ -2176,21 +2200,24 @@ function startPlace(u, kind) {
 function finishPlace(z, i) {
   const { u, kind } = S.pl, c = cc(u), verb = kind === 'move' ? 'Move' : 'Place'; S.pl = null;
   if (kind === 'move' && GRP(find(u).z) === GRP(z)) { put(u, z, i, S.P[u] || 'u', 'Move'); return; }
-  const o = posOpts(c, z);
+  let o = posOpts(c, z); if (z === 'stz' && (i === 0 || i === 4) && c.type.includes('Pendulum')) o = o.filter(x => x[1] === 'u');
+  if (o.length === 1) { put(u, z, i, o[0][1], verb + ' (' + o[0][0] + ')'); return; }
   draw(); showMenu({ t: 'Position' }, o.map(x => [x[0], () => put(u, z, i, x[1], verb + ' (' + x[0] + ')')]));
 }
 function items(u) {
-  const { z } = find(u), c = cc(u), ex = isEx(c), bd = BOARD.includes(z), a = [];
+  const { z } = find(u), c = cc(u), ex = isEx(c), pe = c.type.includes('Pendulum'), bd = BOARD.includes(z), a = [];
+  const fu = z === 'extra' && S.P[u] === 'x', side = z === 'gy' || z === 'ban';
   a.push(['Info', () => openInfo(c, true), 1]);
-  if (z === 'hand' || bd) a.push(['Activate Effect', () => fx(u, 'a')]);
-  if (bd) a.push(['Target', () => fx(u, 't')]);
+  if ((z === 'hand' || z === 'deck' || z === 'extra') && !fu) a.push(['Reveal', () => reveal(u)]);
+  if (z === 'hand' || bd || side) a.push(['Activate Effect', () => fx(u, 'a')]);
+  if (bd || side || fu) a.push(['Target', () => fx(u, 't')]);
   if (!bd) a.push(['Place', () => startPlace(u, 'place')]);
   else { a.push(['Move', () => startPlace(u, 'move')]); if (posOpts(c, z)) a.push(['Position / Flip', () => posMenu(u, z), 1]); }
   if (z !== 'hand' && !ex) a.push(['To Hand', () => toZone(u, 'hand', 'u', 'To Hand')]);
-  if (z !== 'gy') a.push(['To GY', () => toZone(u, 'gy', 'u', 'To GY')]);
+  if (z !== 'gy' && !(pe && bd)) a.push(['To GY', () => toZone(u, 'gy', 'u', 'To GY')]);   // a Pendulum leaving the field never reaches the GY
   if (z !== 'ban') a.push(['Banish', () => banMenu(u), 1]);
-  if (ex) { if (z !== 'extra') a.push(['To Extra Deck', () => toZone(u, 'extra', 'u', 'To Extra Deck')]); }
-  else if (z !== 'deck') { a.push(['To Bottom Deck', () => toZone(u, 'dbot', 'u', 'To Bottom Deck')]); a.push(['To Top Deck', () => toZone(u, 'dtop', 'u', 'To Top Deck')]); }
+  if ((ex || pe) && z !== 'extra') a.push(['To Extra Deck', () => toZone(u, 'extra', pe && (bd || !ex) ? 'x' : 'u', 'To Extra Deck')]);
+  if (!ex) { a.push(['To Bottom Deck', () => toZone(u, 'dbot', 'u', 'To Bottom Deck')]); a.push(['To Top Deck', () => toZone(u, 'dtop', 'u', 'To Top Deck')]); }
   return a;
 }
 function openCard(u) { showMenu({ u }, items(u)); }
