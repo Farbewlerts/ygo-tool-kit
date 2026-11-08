@@ -318,7 +318,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
 #selSheet button.on{font-weight:700;color:#7cc4ff}
 #selSheet button.on::after{content:"\2713"}
 /* ---------- solo mode ---------- */
-#pane-solo{--cw:80px;--ch:calc(var(--cw)*1.46);--hw:90px;--fx-a:1s;--fx-t:.3s;--fd:3s;--hz:2s}
+#pane-solo{--cw:80px;--ch:calc(var(--cw)*1.46);--hw:90px;--fx-a:1.7s;--fx-t:.3s;--fd:3s;--hz:2s}
 #pane-solo .stb{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 #pane-solo .stb button:disabled{opacity:.4;cursor:default}
 #soloInfo{color:var(--muted);font-size:13px;margin-top:8px}
@@ -346,7 +346,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
 .cd.fxa{animation:fxa var(--fx-a) ease-in-out 1;z-index:3}
 .cd.fxt{animation:fxt var(--fx-t) ease-out 2;z-index:3}
 .cd.fxt::after{content:'';position:absolute;inset:0;background:#ff3b30;opacity:0;pointer-events:none;animation:fxto var(--fx-t) ease-out 2}
-@keyframes fxa{0%{transform:var(--tr) scale(1);filter:none;box-shadow:0 0 0 1px #000}35%{transform:var(--tr) scale(1.14);filter:brightness(1.55);box-shadow:0 0 0 2px #fff,0 0 22px 8px #ffd66b}100%{transform:var(--tr) scale(1);filter:none;box-shadow:0 0 0 1px #000}}
+@keyframes fxa{0%{transform:var(--tr) scale(1);filter:none;box-shadow:0 0 0 1px #000}30%,62%{transform:var(--tr) scale(1.14);filter:brightness(1.55);box-shadow:0 0 0 2px #fff,0 0 22px 8px #ffd66b}100%{transform:var(--tr) scale(1);filter:none;box-shadow:0 0 0 1px #000}}
 @keyframes fxt{0%{box-shadow:0 0 0 2px #fff,0 0 22px 8px #ff3b30;filter:brightness(1.3) saturate(1.5)}100%{box-shadow:0 0 0 1px #000;filter:none}}
 @keyframes fxto{0%{opacity:.5}100%{opacity:0}}
 .cnt{position:absolute;right:4px;bottom:4px;background:#000;color:#fff;border-radius:7px;padding:0 6px;font-weight:700;font-size:max(11px,calc(var(--cw)*.24));line-height:1.35;z-index:2;pointer-events:none}
@@ -355,16 +355,17 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
 .hand{display:flex;gap:6px;width:max-content;margin:0 auto;padding:12px 10px;min-height:calc(var(--hw)*1.46 + 24px)}
 .hc{position:relative;flex:none;width:var(--hw);height:calc(var(--hw)*1.46)}
 .hc .cd{--tr:translate(0,0);position:absolute;left:0;top:0;width:100%;height:100%}
-.sov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);align-items:center;justify-content:center;z-index:44;padding:16px}
+.sov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);align-items:center;justify-content:center;z-index:44;padding:calc(88px + env(safe-area-inset-top,0px)) 16px calc(68px + env(safe-area-inset-bottom,0px))}
 .sov.on{display:flex}
+.sov>*{max-height:100%!important}
 #soloMenu{z-index:45}
 .smenu{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(320px,100%);max-height:78vh;max-height:78dvh;overflow:auto;overscroll-behavior:contain;padding-bottom:6px}
-.mh{position:sticky;top:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:12px 14px;margin-bottom:6px;background:linear-gradient(#2f86c9,#1f5f98);border-bottom:2px solid #123a5f;color:#fff;font-weight:700;font-size:17px;text-align:center}
+.mh{position:sticky;top:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:8px 14px;margin-bottom:4px;background:linear-gradient(#2f86c9,#1f5f98);border-bottom:2px solid #123a5f;color:#fff;font-weight:700;font-size:17px;text-align:center}
 .sx{position:absolute;right:8px;top:8px;width:32px;height:32px;min-width:0;min-height:0;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border-radius:50%;border:0;background:rgba(0,0,0,.35);color:#fff;font-size:16px;line-height:1;padding:0;cursor:pointer}
 .mh span{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mh img{height:84px;width:auto;border-radius:3px;box-shadow:0 0 0 1px #000;display:block}
-.mh .bk{width:57px;height:84px;border-radius:3px;border:2px solid #c99a55;background:repeating-linear-gradient(135deg,#5a3418 0 8px,#3b2210 8px 16px);box-sizing:border-box}
-.smenu .mi{all:unset;box-sizing:border-box;display:block;width:calc(100% - 20px);margin:6px 10px 0;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);font-size:15px;text-align:center;cursor:pointer;color:var(--text)}
+.mh img{height:64px;width:auto;border-radius:3px;box-shadow:0 0 0 1px #000;display:block}
+.mh .bk{width:44px;height:64px;border-radius:3px;border:2px solid #c99a55;background:repeating-linear-gradient(135deg,#5a3418 0 8px,#3b2210 8px 16px);box-sizing:border-box}
+.smenu .mi{all:unset;box-sizing:border-box;display:block;width:calc(100% - 20px);margin:5px 10px 0;padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);font-size:15px;text-align:center;cursor:pointer;color:var(--text)}
 .smenu .mi:active{background:#2a3f57}
 @media(hover:hover){.smenu .mi:hover{background:#2a3f57}}
 .slist{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(400px,100%);max-height:78vh;max-height:78dvh;overflow:auto;overscroll-behavior:contain;padding:0 14px 12px}
@@ -2078,7 +2079,7 @@ function applyFx() {
     if (S.fx !== f) return;
     const el = $('#soloBoard').querySelector(`.cd[data-u="${f.u}"]`) || $('#soloHand').querySelector(`.cd[data-u="${f.u}"]`);
     if (el) { void el.offsetWidth; el.classList.add(f.t === 'a' ? 'fxa' : 'fxt'); }
-    S.fxT = setTimeout(() => { if (S.fx === f) S.fx = null; pane.querySelectorAll('.fxa,.fxt').forEach(e => e.classList.remove('fxa', 'fxt')); }, 1200);
+    S.fxT = setTimeout(() => { if (S.fx === f) S.fx = null; pane.querySelectorAll('.fxa,.fxt').forEach(e => e.classList.remove('fxa', 'fxt')); }, 1900);
   }, 100);
 }
 function phase() {                                // every breathing element starts from the same clock, so they all breathe together
@@ -2123,11 +2124,7 @@ function showMenu(head, items) {
 $('#soloMenu').addEventListener('click', e => { if (e.target.id === 'soloMenu') closeMenu(); });
 function openList(z) {
   const a = S.Z[z]; if (!a.length) { closeList(); return; }
-  const stack = z === 'deck' || z === 'extra';
-  S.list = z; const us = a.slice(); if (stack) us.sort((p, q) => ((S.P[q] === 'x') - (S.P[p] === 'x')) || srt(p, q));
-  const g = [], seen = {};
-  const K = u => cc(u).id + (S.P[u] === 'x' ? 'x' : '');
-  us.forEach(u => { if (stack && seen[K(u)] !== undefined) g[seen[K(u)]].n++; else { if (stack) seen[K(u)] = g.length; g.push({ u, n: 1 }); } });
+  S.list = z; const g = a.map(u => ({ u, n: 1 }));   // exact pile order, top card first, left to right then top to bottom
   $('#slh').innerHTML = `${esc(NAMES[z])} (${a.length})<button class="sx" data-x="1" aria-label="Close">✕</button>`;
   sync($('#slg'), g.map(o => ({ k: o.u, h: `<div class="lt" data-u="${o.u}">${cardEl(o.u, S.P[o.u] === 'x' ? ' fu' : '')}${o.n > 1 ? `<span class="cnt">${o.n}</span>` : ''}</div>` })));
   $('#soloList').classList.add('on'); phase();
@@ -2157,30 +2154,39 @@ function put(u, z, i, pos, verb) {
   commit(`${verb}: ${cc(u).name} [${zn(L)} → ${NAMES[z]}${['mmz', 'stz', 'emz'].includes(z) ? i + 1 : ''}]`);
 }
 function fx(u, t) {
-  const L = find(u);
-  if (L && (L.z === 'gy' || L.z === 'ban') && L.i > 0) { S.Z[L.z].splice(L.i, 1); S.Z[L.z].unshift(u); }   // a card chosen from GY/BAN goes to the top first
+  const L = find(u), side = L && (L.z === 'gy' || L.z === 'ban') && L.i > 0;
+  if (side) { S.Z[L.z].splice(L.i, 1); S.Z[L.z].unshift(u); }   // a card chosen from GY/BAN goes to the top for the effect
   closeList(); S.fx = { u, t, fresh: true }; commit(`${t === 'a' ? 'Activate Effect' : 'Target'}: ${cc(u).name} [${zn(find(u))}]`);
+  if (side) {
+    const at = S.idx;
+    setTimeout(() => {                                          // when the effect is over it returns to its old place in the pile
+      const A = S.Z[L.z]; if (S.idx !== at || A[0] !== u) return;
+      A.shift(); A.splice(Math.min(L.i, A.length), 0, u); S.hist[at].s = snap(); draw();
+    }, t === 'a' ? 1950 : 850);
+  }
 }
 function reveal(u) {
   const L = find(u), c = cc(u); closeList(); commit(`Reveal: ${c.name} [${zn(L)}]`);
   setTimeout(() => {
-    const hand = L.z === 'hand', src = hand ? $('#soloHand').querySelector(`.cd[data-u="${u}"]`) : pane.querySelector(`.sz[data-z="${L.z}"] .zc`);
+    const card = pane.querySelector(`.cd[data-u="${u}"]`), src = card || pane.querySelector(`.sz[data-z="${L.z}"]`);
     if (!src) return;
-    const r = src.getBoundingClientRect(), hh = r.width * 1.46, H = Math.min(innerHeight * .7, 440), s = (H / 1.46) / r.width;
-    const dx = innerWidth / 2 - (r.left + r.width / 2), dy = innerHeight / 2 - (r.top + hh / 2), mid = `translate(${dx}px,${dy}px) scale(${s})`;
-    const bg = document.createElement('div'); bg.style.cssText = 'position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.45);opacity:0';
-    const im = document.createElement('img'); im.src = srcOf(c); im.draggable = false;
-    im.style.cssText = `position:fixed;z-index:61;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${hh}px;border-radius:4px;pointer-events:none`;
-    const g = a => `0 0 ${a}px ${a / 4}px rgba(255,201,40,.8)`;
-    document.body.append(bg, im); if (hand) src.style.visibility = 'hidden';
-    const a = im.animate([{ transform: 'none', boxShadow: '0 0 0 0 rgba(255,201,40,0)', easing: 'ease-out' }, { transform: mid, boxShadow: g(26), offset: .22 }, { transform: mid, boxShadow: g(12), offset: .5 }, { transform: mid, boxShadow: g(26), offset: .78, easing: 'ease-in' }, { transform: 'none', boxShadow: '0 0 0 0 rgba(255,201,40,0)' }], { duration: 1600 });
+    const r = src.getBoundingClientRect(), br = $('#soloBoard').getBoundingClientRect();
+    const cw = parseFloat(getComputedStyle(pane).getPropertyValue('--cw')) || 80, W = cw * 1.5, H = W * 1.46;
+    const cx = br.left + br.width / 2, cy = br.top + br.height / 2;      // lands in the middle of the board, about the size of a board card
+    const from = `translate(${r.left + r.width / 2 - cx}px,${r.top + r.height / 2 - cy}px) scale(${r.width / W})`;
+    const bg = document.createElement('div'); bg.style.cssText = 'position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.3);opacity:0';
+    const im = document.createElement('img'); im.src = srcOf(c); im.draggable = false;   // drawn at its final size, so it stays sharp
+    im.style.cssText = `position:fixed;z-index:61;left:${cx - W / 2}px;top:${cy - H / 2}px;width:${W}px;height:${H}px;border-radius:4px;pointer-events:none`;
+    const g = '0 0 22px 5px rgba(255,201,40,.8)', n = '0 0 0 0 rgba(255,201,40,0)';
+    document.body.append(bg, im); if (card) card.style.visibility = 'hidden';
+    const a = im.animate([{ transform: from, boxShadow: n, easing: 'ease-out' }, { transform: 'none', boxShadow: g, offset: .22 }, { transform: 'none', boxShadow: g, offset: .78, easing: 'ease-in' }, { transform: from, boxShadow: n }], { duration: 1600 });
     bg.animate([{ opacity: 0 }, { opacity: 1, offset: .22 }, { opacity: 1, offset: .78 }, { opacity: 0 }], { duration: 1600 });
-    const done = () => { bg.remove(); im.remove(); src.style.visibility = ''; };
+    const done = () => { bg.remove(); im.remove(); if (card) card.style.visibility = ''; };
     a.onfinish = a.oncancel = done; bg.addEventListener('click', () => a.finish());
   }, 100);
 }
 // Positions depend on the zone, not on the card type: any card can sit in a Monster Zone or a Spell & Trap Zone.
-function posOpts(c, z) { return (z === 'mmz' || z === 'emz') ? [['Face-up ATK', 'u'], ['Face-up DEF', 'd'], ['Face-down DEF', 'f']] : [['Face-up', 'u'], ['Set', 's']]; }
+function posOpts(c, z) { if ((z === 'mmz' || z === 'emz') && c.type.includes('Link')) return [['Face-up ATK', 'u']]; return (z === 'mmz' || z === 'emz') ? [['Face-up ATK', 'u'], ['Face-up DEF', 'd'], ['Face-down DEF', 'f']] : [['Face-up', 'u'], ['Set', 's']]; }
 function banMenu(u, back) {
   showMenu({ t: 'Banish' }, [['Face-up', () => toZone(u, 'ban', 'd', 'Banish (Face-up)')], ['Face-down', () => toZone(u, 'ban', 'f', 'Banish (Face-down)')], ['Back', back || (() => openCard(u)), 1]]);
 }
@@ -2188,17 +2194,24 @@ function posMenu(u, z) {
   const c = cc(u), o = posOpts(c, z).filter(x => x[1] !== S.P[u]);
   showMenu({ t: 'Position' }, o.map(x => [x[0], () => { S.P[u] = x[1]; commit(`Position: ${c.name} [${zn(find(u))}] → ${x[0]}`); }]).concat([['Back', () => openCard(u), 1]]));
 }
-function validZones() {
-  const v = [], e = (z, i) => { if (!S.Z[z][i]) v.push(z + ':' + i); };
+function validZones(u, kind) {
+  const v = [], e = (z, i) => { const o = S.Z[z][i]; if (!o || (kind === 'move' && o !== u)) v.push(z + ':' + i); };
   for (let i = 0; i < 5; i++) e('mmz', i); e('emz', 0); e('emz', 1); for (let i = 0; i < 5; i++) e('stz', i); e('field', 0);
   return v;
 }
 function startPlace(u, kind) {
-  const v = validZones(); if (!v.length) { toast('No empty zone available.'); return; }
+  const v = validZones(u, kind); if (!v.length) { toast('No empty zone available.'); return; }
   S.pl = { u, kind, v: new Set(v) }; closeList(); draw();
 }
 function finishPlace(z, i) {
   const { u, kind } = S.pl, c = cc(u), verb = kind === 'move' ? 'Move' : 'Place'; S.pl = null;
+  const L0 = find(u), o2 = S.Z[z][i];
+  if (kind === 'move' && o2 && o2 !== u) {                       // target zone occupied: the two cards swap places
+    const mon = q => q === 'mmz' || q === 'emz', fix = (p, toMon, x) => toMon ? (cc(x).type.includes('Link') ? 'u' : ({ s: 'f' }[p] || p)) : ({ d: 'u', f: 's' }[p] || p);
+    const n1 = zn(L0), n2 = zn({ z, i });
+    if (GRP(L0.z) !== GRP(z)) { S.P[u] = fix(S.P[u], mon(z), u); S.P[o2] = fix(S.P[o2], mon(L0.z), o2); }
+    S.Z[L0.z][L0.i] = o2; S.Z[z][i] = u; commit(`Swap: ${c.name} [${n1}] ⇄ ${cc(o2).name} [${n2}]`); return;
+  }
   if (kind === 'move' && GRP(find(u).z) === GRP(z)) { put(u, z, i, S.P[u] || 'u', 'Move'); return; }
   let o = posOpts(c, z); if (z === 'stz' && (i === 0 || i === 4) && c.type.includes('Pendulum')) o = o.filter(x => x[1] === 'u');
   if (o.length === 1) { put(u, z, i, o[0][1], verb + ' (' + o[0][0] + ')'); return; }
@@ -2208,11 +2221,11 @@ function items(u) {
   const { z } = find(u), c = cc(u), ex = isEx(c), pe = c.type.includes('Pendulum'), bd = BOARD.includes(z), a = [];
   const fu = z === 'extra' && S.P[u] === 'x', side = z === 'gy' || z === 'ban';
   a.push(['Info', () => openInfo(c, true), 1]);
-  if ((z === 'hand' || z === 'deck' || z === 'extra') && !fu) a.push(['Reveal', () => reveal(u)]);
+  if (((z === 'hand' || z === 'deck' || z === 'extra') && !fu) || (bd && (S.P[u] === 'f' || S.P[u] === 's'))) a.push(['Reveal', () => reveal(u)]);
   if (z === 'hand' || bd || side) a.push(['Activate Effect', () => fx(u, 'a')]);
   if (bd || side || fu) a.push(['Target', () => fx(u, 't')]);
   if (!bd) a.push(['Place', () => startPlace(u, 'place')]);
-  else { a.push(['Move', () => startPlace(u, 'move')]); if (posOpts(c, z)) a.push(['Position / Flip', () => posMenu(u, z), 1]); }
+  else { a.push(['Move / Swap', () => startPlace(u, 'move')]); if (posOpts(c, z).some(x => x[1] !== S.P[u])) a.push(['Position / Flip', () => posMenu(u, z), 1]); }
   if (z !== 'hand' && !ex) a.push(['To Hand', () => toZone(u, 'hand', 'u', 'To Hand')]);
   if (z !== 'gy' && !(pe && bd)) a.push(['To GY', () => toZone(u, 'gy', 'u', 'To GY')]);   // a Pendulum leaving the field never reaches the GY
   if (z !== 'ban') a.push(['Banish', () => banMenu(u), 1]);
