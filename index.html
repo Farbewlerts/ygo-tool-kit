@@ -95,14 +95,15 @@ button:disabled{opacity:.35;cursor:not-allowed}
 .searchwrap input{width:100%;padding:11px 14px;font-size:15px}
 .searchwrap .clrw input{padding-right:38px}
 #results{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:#0a2442;border:1px solid var(--accent2);border-radius:8px;max-height:420px;overflow:auto;z-index:20;display:none;box-shadow:0 10px 30px rgba(0,0,0,.5)}
-#results .ri{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--line)}
-#results .ri:last-child{border-bottom:none}
-#results .ri .t{flex:1;min-width:0}
-#results .ri .t .n{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#results .ri .t .m{color:var(--muted);font-size:12px}
 #results .msg{padding:12px;color:var(--muted)}
-#results .xs{display:flex;gap:6px;flex:none}
-#results .xs button{min-width:38px;padding:4px 8px}
+#results .rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;padding:10px}
+#results .rc{position:relative;cursor:pointer;border-radius:4px;transition:transform .12s,opacity .12s}
+@media(hover:hover){#results .rc:hover{transform:translateY(-2px)}}
+#results .rc img{width:100%;aspect-ratio:421/614;object-fit:cover;display:block;border-radius:4px;background:#08203a;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+#results .rc.full{opacity:.45}
+#results .rc .badge[hidden]{display:none}
+#results .rc .badge{font-size:14px;padding:0 6px;border-width:1px;border-radius:6px}
+#results .rc .gban{width:22px;height:22px;font-size:13px}
 #results .more{padding:8px;text-align:center}
 .srow{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-top:8px}
 .sleft{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
@@ -245,7 +246,7 @@ html{-webkit-text-size-adjust:100%;touch-action:manipulation}
 html,body{overscroll-behavior:none}
 body{-webkit-tap-highlight-color:transparent}
 @media(hover:none){body{cursor:pointer}}   /* iOS only sends taps to elements that look clickable */
-.gcard img,.scell img,.thumb,#results .ri{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.gcard img,.scell img,.thumb,#results .rc{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .searchwrap{scroll-margin-top:calc(var(--hh,60px) + 8px)}
 #toast,#tmBar{bottom:calc(24px + env(safe-area-inset-bottom))}
 #warn{bottom:calc(24px + env(safe-area-inset-bottom))}
@@ -1207,8 +1208,9 @@ function buildParams(q, extra) {
 function refreshResultBtns() {
   document.querySelectorAll('#results .ri').forEach(row => {
     const c = lastResults[+row.dataset.i]; if (!c) return;
-    const remain = banLimit(c) - totalCopies(c.id);
-    row.querySelectorAll('[data-n]').forEach(b => { b.disabled = +b.dataset.n > remain; });
+    const have = totalCopies(c.id), bd = row.querySelector('.badge');
+    bd.hidden = !have; bd.textContent = have + 'x';
+    row.classList.toggle('full', have >= banLimit(c));
   });
 }
 function renderResults() {
@@ -1216,10 +1218,10 @@ function renderResults() {
   hideTip();
   if (!lastResults.length) { box.innerHTML = '<div class="msg">No cards found.</div>'; updateResultsVis(); return; }
   const more = lastResults.length > shown;
-  box.innerHTML = lastResults.slice(0, shown).map((c, i) => `<div class="ri" data-i="${i}">
-    <div class="t"><div class="n">${esc(c.name)}</div><div class="m">${esc(typeLabel(c))}${isExtra(c) ? ' · Extra Deck' : ''}${banBadge(c)}</div></div>
-    <div class="xs"><button class="primary" data-add data-n="1">x1</button><button class="primary" data-add data-n="2">x2</button><button class="primary" data-add data-n="3">x3</button></div>
-  </div>`).join('') + (more ? '<div class="more"><button id="btnMore">Load More</button></div>' : '');
+  box.innerHTML = '<div class="rgrid">' + lastResults.slice(0, shown).map((c, i) => `<div class="ri rc" data-i="${i}" title="${esc(c.name)}">
+    <img data-cid="${c.id}" data-url="${esc(c.img)}" alt="${esc(c.name)}"><span class="badge" hidden></span>${banLimit(c) < 3 ? `<span class="gban b${banLimit(c)}" title="${BAN_NAME[banLimit(c)]}">${banLimit(c)}</span>` : ''}
+  </div>`).join('') + '</div>' + (more ? '<div class="more"><button id="btnMore">Load More</button></div>' : '');
+  fillImgs(box);
   box.scrollTop = st;
   updateResultsVis();
   refreshResultBtns();
@@ -1262,11 +1264,13 @@ $('#results').addEventListener('mouseover', ev => {
   if (row === tipRow) return;
   hideTip(); tipRow = row; tipT = setTimeout(() => showTip(row), 250);
 });
-$('#results').addEventListener('click', ev => {   // touch: tap a result row (not its x1/x2/x3 buttons) to read the card
-  if (!TOUCH || ev.target.closest('button')) return;
-  const row = ev.target.closest('.ri'); const c = row && lastResults[+row.dataset.i];
-  if (c) openInfo(c, false);
-});
+let lpT = null, lpDone = false;                 // touch: press and hold a card to read it (a quick tap adds one copy)
+$('#results').addEventListener('touchstart', ev => {
+  const row = ev.target.closest('.ri'); lpDone = false; clearTimeout(lpT); if (!row) return;
+  lpT = setTimeout(() => { lpDone = true; const c = lastResults[+row.dataset.i]; if (c) openInfo(c, false); }, 500);
+}, { passive: true });
+['touchend', 'touchmove', 'touchcancel'].forEach(n => $('#results').addEventListener(n, () => clearTimeout(lpT), { passive: true }));
+$('#results').addEventListener('contextmenu', ev => { if (ev.target.closest('.ri')) ev.preventDefault(); });
 $('#results').addEventListener('mouseleave', hideTip);
 $('#results').addEventListener('scroll', hideTip);
 $('#results').addEventListener('click', hideTip);
@@ -1311,8 +1315,8 @@ document.addEventListener('click', ev => {
   if (seg) { addMode = seg.dataset.mode; document.querySelectorAll('.seg button').forEach(b => b.classList.toggle('on', b.dataset.mode === addMode)); return; }
   if (t.closest('#warn')) { $('#warn').style.display = 'none'; return; }
 
-  const add = t.closest('[data-add]');
-  if (add) { const c = lastResults[+add.closest('.ri').dataset.i]; if (c) addCard(c, +add.dataset.n); return; }
+  const rc = t.closest('#results .ri');
+  if (rc) { if (lpDone) { lpDone = false; return; } const c = lastResults[+rc.dataset.i]; if (c) addCard(c, 1); return; }
 
   const del = t.closest('[data-deltag]');
   if (del) { removeTag(del.dataset.deltag); return; }
