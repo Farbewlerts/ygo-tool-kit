@@ -349,14 +349,11 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
 @keyframes fxa{0%{transform:var(--tr) scale(1);filter:none;box-shadow:0 0 0 1px #000}20%,48%{transform:var(--tr) scale(1.14);filter:brightness(1.55);box-shadow:0 0 0 2px #fff,0 0 22px 8px #ffd66b}100%{transform:var(--tr) scale(1);filter:none;box-shadow:0 0 0 1px #000}}
 @keyframes fxt{0%{box-shadow:0 0 0 2px #fff,0 0 22px 8px #ff3b30;filter:brightness(1.3) saturate(1.5)}100%{box-shadow:0 0 0 1px #000;filter:none}}
 @keyframes fxto{0%{opacity:.5}100%{opacity:0}}
-.mt{position:absolute;left:50%;top:50%;width:var(--cw);height:var(--ch);--rt:0deg;transform:translate(calc(-50% + var(--cw)*.06*var(--k)),calc(-50% + var(--ch)*.045*var(--k))) rotate(var(--rt));border-radius:3px;box-sizing:border-box;border:1px solid #000;background:repeating-linear-gradient(135deg,#6b6f78 0 6px,#4a4d55 6px 12px);box-shadow:0 0 0 1px #000;pointer-events:none}
-.mt.rot{--rt:-90deg}
-.cnt.mc{left:auto;right:3px;top:3px;bottom:auto;transform:none;background:#2a5bd7}
-.cd.sc{box-shadow:0 0 0 2px #4aa3ff;animation:scb 1.2s ease-in-out infinite}
+.cd.xsc{box-shadow:0 0 0 2px #4aa3ff;animation:scb 1.2s ease-in-out infinite}
 @keyframes scb{50%{box-shadow:0 0 0 2px #000,0 0 12px 4px #4aa3ff}}
-.cd.sp::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(40,120,255,.5);color:#fff;font-size:calc(var(--cw)*.5);font-weight:700}
-.lt .cd.sp::after{font-size:28px}
-.cd.rot.sp::after{transform:rotate(90deg)}
+.cd.xsp::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(40,120,255,.5);color:#fff;font-size:calc(var(--cw)*.5);font-weight:700}
+.lt .cd.xsp::after{font-size:28px}
+.cd.rot.xsp::after{transform:rotate(90deg)}
 .sb{margin-top:6px;padding:4px 18px;border-radius:8px;border:1px solid #123a5f;background:#fff;color:#1f5f98;font-weight:700;cursor:pointer}
 #soloHint button{margin-left:6px}
 .cnt{position:absolute;left:50%;right:auto;bottom:3px;transform:translateX(-50%);background:#000;color:#fff;border-radius:7px;padding:0 6px;font-weight:700;font-size:max(11px,calc(var(--cw)*.24));line-height:1.35;z-index:2;pointer-events:none}
@@ -2087,8 +2084,7 @@ function zoneInner(z, i) {
   if (PILES.includes(z)) { if (!a.length) return ''; const fu = z === 'extra' && a.find(x => S.P[x] === 'x'); return ((z === 'deck' || z === 'extra') ? (fu ? cardEl(fu, ' fu') : '<div class="cd back"></div>') : cardEl(a[0])) + `<span class="cnt">${a.length}</span>`; }
   const x = a[i]; if (!x) return '';
   const m = mats(x); if (!m.length) return cardEl(x);
-  const rt = (S.P[x] === 'd' || S.P[x] === 'f') ? ' rot' : '';
-  return [...Array(Math.min(3, m.length))].map((_, k, r) => `<div class="mt${rt}" style="--k:${r.length - k}"></div>`).join('') + cardEl(x) + `<span class="cnt mc">${m.length}</span>`;
+  return cardEl(x) + `<span class="cnt">${m.length}</span>`;
 }
 function applyFx() {
   pane.querySelectorAll('.fxa,.fxt').forEach(e => e.classList.remove('fxa', 'fxt'));
@@ -2117,8 +2113,8 @@ function draw() {
   $('#soloUndo').disabled = S.idx <= 0; $('#soloRedo').disabled = S.idx >= S.hist.length - 1;
   const ht = $('#soloHint'); ht.classList.toggle('on', !!(S.pl || (S.sel && S.sel.kind === 'xyz')));
   ht.innerHTML = S.sel ? `<span>Select Xyz Materials: ${S.sel.pk.size} Selected</span> <button data-b="seldone">Done</button> <button data-b="selcancel">Cancel</button>` : S.pl && S.pl.msg ? esc(S.pl.msg) : 'Choose a highlighted zone. Tap anywhere else to cancel.';
-  $('#soloBoard').querySelectorAll('.cd.sc,.cd.sp').forEach(e => e.classList.remove('sc', 'sp'));
-  if (S.sel && S.sel.kind === 'xyz') S.sel.cand.forEach(u => { const e = $('#soloBoard').querySelector(`.cd[data-u="${u}"]`); if (e) { e.classList.add('sc'); if (S.sel.pk.has(u)) e.classList.add('sp'); } });
+  $('#soloBoard').querySelectorAll('.cd.xsc,.cd.xsp').forEach(e => e.classList.remove('xsc', 'xsp'));
+  if (S.sel && S.sel.kind === 'xyz') S.sel.cand.forEach(u => { const e = $('#soloBoard').querySelector(`.cd[data-u="${u}"]`); if (e) { e.classList.add('xsc'); if (S.sel.pk.has(u)) e.classList.add('xsp'); } });
   applyFx();
   if (S.list) openList(S.list);
   phase();
@@ -2155,7 +2151,7 @@ function openList(z) {
 function closeList() { S.list = null; S.mv = false; $('#soloList').classList.remove('on'); }
 $('#soloList').addEventListener('click', e => {
   const sb = e.target.closest('[data-s]'); if (sb) { selAct(sb.dataset.s); return; }
-  if (S.sel && S.sel.kind === 'pend') { const q = e.target.closest('.lt'); if (q) togglePick(q.dataset.u); return; }
+  if (S.sel && S.sel.kind !== 'xyz') { const q = e.target.closest('.lt'); if (q) togglePick(q.dataset.u); return; }
   if (e.target.closest('[data-x]')) { closeList(); return; }
   const t = e.target.closest('.lt'); if (t) { if (S.mv) openInfo(cc(t.dataset.u), true); else openCard(t.dataset.u); return; }
   if (e.target.id === 'soloList') closeList();
@@ -2269,11 +2265,12 @@ function startXyz(u) {                                   // step 1: choose the m
   if (!cand.size) { toast('No Monster To Use As Material.'); return; }
   closeList(); S.pl = null; S.sel = { kind: 'xyz', u, cand, pk: new Set() }; draw();
 }
-function togglePick(u) { const s = S.sel; if (!s || !(s.cand.has(u))) return; if (s.pk.has(u)) s.pk.delete(u); else s.pk.add(u); if (s.kind === 'xyz') draw(); else openPendSel(); }
+function togglePick(u) { const s = S.sel; if (!s || !(s.cand.has(u))) return; if (s.pk.has(u)) s.pk.delete(u); else s.pk.add(u); if (s.kind === 'xyz') draw(); else openSelList(); }
 function selAct(k) {
   const s = S.sel; if (!s) return;
   if (k === 'cancel') { S.sel = null; closeList(); draw(); return; }
   if (!s.pk.size) { toast(s.kind === 'xyz' ? 'Select At Least One Material.' : 'Select At Least One Card.'); return; }
+  if (s.kind === 'detach') { doDetach(); return; }
   if (s.kind === 'xyz') {
     const u = s.u, mm = [...s.pk]; S.sel = null; draw();
     showMenu({ t: 'Position' }, [['Face-up ATK', 'u'], ['Face-up DEF', 'd']].map(x => [x[0], () => {
@@ -2294,13 +2291,15 @@ function finishXyz(z, i) {
   const L = remove(u); S.Z[z][i] = u; S.P[u] = pos; S.M[u] = all;
   commit(`Xyz Summon: ${c.name} (Materials: ${mm.map(m => cc(m).name).join(', ')}) [${zn(L)} → ${zlab(z, i)}]`);
 }
-function detach(u) {
-  const go = m => { const a = S.M[u]; a.splice(a.indexOf(m), 1); if (!a.length) delete S.M[u]; S.Z.gy.unshift(m); S.P[m] = 'u'; commit(`Detach Material: ${cc(m).name} (from ${cc(u).name}) [${zn(find(u))}]`); };
-  const a = mats(u); if (a.length === 1) { go(a[0]); return; }
-  showMenu({ u }, a.map(m => [cc(m).name, () => go(m)]).concat([['Back', () => openCard(u), 1]]));
+function detach(u) { closeList(); S.pl = null; S.sel = { kind: 'detach', u, cand: new Set(mats(u)), pk: new Set(), title: 'Detach Material' }; openSelList(); }
+function doDetach() {
+  const s = S.sel, u = s.u, got = mats(u).filter(m => s.pk.has(m));            // keeps the order they were attached in
+  S.M[u] = mats(u).filter(m => !s.pk.has(m)); if (!S.M[u].length) delete S.M[u];
+  got.forEach(m => { S.Z.gy.unshift(m); S.P[m] = 'u'; });
+  closeList(); commit(`Detach Material: ${got.map(m => cc(m).name).join(', ')} (from ${cc(u).name}) [${zn(find(u))}]`);
 }
 const xyzTargets = u => { const v = new Set(); MZ.forEach(z => S.Z[z].forEach((o, i) => { if (o && o !== u && isXyz(cc(o)) && (S.P[o] === 'u' || S.P[o] === 'd')) v.add(z + ':' + i); })); return v; };
-function matMenu(u) { showMenu({ u }, [['View', () => openMats(u)], ['Detach', () => detach(u), 1], ['Back', () => openCard(u), 1]]); }
+function matMenu(u) { showMenu({ u }, [['View', () => openMats(u)], ['Detach', () => detach(u)], ['Back', () => openCard(u), 1]]); }
 function openMats(u) {
   const a = mats(u); if (!a.length) return; S.list = null; S.mv = true;
   $('#slh').innerHTML = `Xyz Materials (${a.length})<button class="sx" data-x="1" aria-label="Close">✕</button>`;
@@ -2320,15 +2319,15 @@ function finishAttach(z, i) {
 function startPend(u) {
   const ok = i => { const o = S.Z.stz[i]; return o && isPen(cc(o)) && S.P[o] === 'u'; };
   if (!ok(0) || !ok(4)) { toast('Need Two Pendulum Scales.'); return; }
-  const cand = new Set(); S.Z.hand.forEach(o => { if (isMon(cc(o)) && isPen(cc(o))) cand.add(o); });
+  const cand = new Set(); S.Z.hand.forEach(o => { if (isMon(cc(o))) cand.add(o); });          // any monster from the hand; from the Extra Deck only face-up Pendulum Monsters
   S.Z.extra.forEach(o => { if (S.P[o] === 'x') cand.add(o); });
   if (!cand.size) { toast('No Pendulum Monster To Summon.'); return; }
-  closeList(); S.pl = null; S.sel = { kind: 'pend', cand, pk: new Set() }; openPendSel();
+  closeList(); S.pl = null; S.sel = { kind: 'pend', cand, pk: new Set(), title: 'Pendulum Summon' }; openSelList();
 }
-function openPendSel() {
+function openSelList() {
   const s = S.sel; if (!s) return; S.list = null;
-  $('#slh').innerHTML = `Pendulum Summon · ${s.pk.size} Selected<br><button class="sb" data-s="done">Done</button><button class="sx" data-s="cancel" aria-label="Cancel">✕</button>`;
-  sync($('#slg'), [...s.cand].map(u => ({ k: u, h: `<div class="lt" data-u="${u}">${cardEl(u, ' sc' + (s.pk.has(u) ? ' sp' : '') + (S.P[u] === 'x' ? ' fu' : ''))}</div>` })));
+  $('#slh').innerHTML = `${s.title} · ${s.pk.size} Selected<br><button class="sb" data-s="done">Done</button><button class="sx" data-s="cancel" aria-label="Cancel">✕</button>`;
+  sync($('#slg'), [...s.cand].map(u => ({ k: u, h: `<div class="lt" data-u="${u}">${cardEl(u, ' xsc' + (s.pk.has(u) ? ' xsp' : '') + (S.P[u] === 'x' ? ' fu' : ''))}</div>` })));
   $('#soloList').classList.add('on'); phase();
 }
 function pendNext() {
