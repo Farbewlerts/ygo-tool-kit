@@ -2178,10 +2178,13 @@ function doSwap(u, z, i) {
   if (GRP(L0.z) !== GRP(z)) { S.P[u] = fix(S.P[u], mon(z)); S.P[o2] = fix(S.P[o2], mon(L0.z)); }
   S.Z[L0.z][L0.i] = o2; S.Z[z][i] = u; commit(`Swap: ${c.name} [${n1}] ⇄ ${cc(o2).name} [${n2}]`);
 }
-function doStack(u, z, i) {                                // u goes under the card in that zone; cards already under u come along
-  const x = S.Z[z][i], L = remove(u), under = mats(u);
-  delete S.M[u]; S.M[x] = mats(x).concat([u], under); S.P[u] = 'u';
-  commit(`Stack: ${cc(u).name} [${zn(L)}] → under ${cc(x).name} [${zlab(z, i)}]`);
+function doStack(u, z, i) {                                // choose the position first, same options as Place
+  showMenu({ t: 'Position' }, posOpts(cc(u), z).map(o => [o[0], () => stackOn(u, z, i, o[1], o[0])]));
+}
+function stackOn(u, z, i, pos, lab) {                      // u lands on top, in the zone of the card it is stacked onto; that card and everything under it become u's materials
+  const x = S.Z[z][i], L = remove(u), own = mats(u), under = mats(x);
+  delete S.M[x]; S.Z[z][i] = u; S.P[u] = pos; S.P[x] = 'u'; S.M[u] = own.concat([x], under);
+  commit(`Stack (${lab}): ${cc(u).name} [${zn(L)}] over ${cc(x).name} [${zlab(z, i)}]`);
 }
 function finishPlace(z, i) {
   if (S.pl.kind === 'token') return finishToken(z, i);
