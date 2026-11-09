@@ -99,7 +99,6 @@ button:disabled{opacity:.35;cursor:not-allowed}
 #results .rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;padding:10px}
 #results .rc{position:relative;cursor:pointer;border-radius:4px;transition:transform .12s,opacity .12s}
 @media(hover:hover){#results .rc:hover{transform:translateY(-2px)}}
-body.searchpad{padding-bottom:80vh}
 @media(max-width:620px){#results .rgrid{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;padding:8px}#results .rc .badge{font-size:11px;padding:0 4px;border-radius:5px}#results .rc .gban{width:17px;height:17px;font-size:10px;left:2px;top:2px}}
 #results .rc img{width:100%;aspect-ratio:421/614;object-fit:cover;display:block;border-radius:4px;background:#08203a;box-shadow:0 2px 8px rgba(0,0,0,.5)}
 #results .rc.full{opacity:.45}
@@ -250,6 +249,23 @@ body{-webkit-tap-highlight-color:transparent}
 @media(hover:none){body{cursor:pointer}}   /* iOS only sends taps to elements that look clickable */
 .gcard img,.scell img,.thumb,#results .rc{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .searchwrap{scroll-margin-top:calc(var(--hh,60px) + 8px)}
+#sbk{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:45;touch-action:none}
+#sHead{display:none}
+body.nosel,body.nosel *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
+body.searching #sbk{display:block}
+body.searching .searchwrap{position:fixed;left:calc(var(--vl,0px) + 8px);top:calc(var(--vt,0px) + 8px);width:calc(var(--vw,100vw) - 16px);max-height:calc(var(--vh,100vh) - 16px);z-index:46;display:flex;flex-direction:column;box-sizing:border-box;padding:10px;background:var(--panel);border:1px solid var(--accent2);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.6);overscroll-behavior:contain}
+body.searching #sHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:700}
+body.searching #sHead button{padding:4px 14px}
+body.searching .searchwrap #results,body.searching .searchwrap .fpanel{position:static;margin-top:8px;max-height:none!important;flex:1 1 auto;min-height:0;box-shadow:none}
+body.searching #warn,body.searching #toast{bottom:auto;top:calc(var(--vt,0px) + var(--vh,100vh) - 12px);transform:translate(-50%,-100%);max-width:calc(var(--vw,100vw) - 32px)}
+body.searching #sHead{margin-bottom:6px}
+body.searching .srow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;margin-top:6px}
+body.searching .sleft{display:contents}
+body.searching #fFormat{grid-column:1;grid-row:1;min-width:0;width:100%}
+body.searching .seg{grid-column:2;grid-row:1}
+body.searching #btnFilter{grid-column:1;grid-row:2}
+body.searching #btnFilterClear{grid-column:2;grid-row:2}
+body.searching .searchwrap #results,body.searching .searchwrap .fpanel{margin-top:6px}
 #toast,#tmBar{bottom:calc(24px + env(safe-area-inset-bottom))}
 #warn{bottom:calc(24px + env(safe-area-inset-bottom))}
 body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bottom))}
@@ -1107,28 +1123,38 @@ let filters = newFilters(), frameMode = 'OR';
 let searchT, searchCtl, lastResults = [], shown = PAGE;
 const panelOpen = () => $('#filterPanel').classList.contains('open');
 let resultsOpen = false, filtersDirty = false;     // results list is only visible while the search box is in use
-function updateResultsVis() { const box = $('#results'); const show = resultsOpen && !panelOpen() && box.innerHTML; box.style.display = show ? 'block' : 'none'; if (!show) hideTip(); else fitDropdowns(); document.body.classList.toggle('searchpad', NARROW() && (!!show || panelOpen())); }
-function fitDropdowns() {                       // small screens: the drop-downs only use the room left above the keyboard / bottom edge and scroll inside
-  const boxes = [$('#results'), $('#filterPanel')];
-  if (!NARROW()) { boxes.forEach(b => b.style.maxHeight = ''); return; }
-  const vv = window.visualViewport ? visualViewport.height : innerHeight;
-  const room = Math.floor(vv - Math.max(0, $('.searchwrap').getBoundingClientRect().bottom) - 16 - 64);   // 64px kept free for the limit pop-up at the bottom
-  boxes.forEach(b => b.style.maxHeight = Math.max(150, Math.min(room, 480)) + 'px');
+function updateResultsVis() { const box = $('#results'); const show = resultsOpen && !panelOpen() && box.innerHTML; box.style.display = show ? 'block' : 'none'; if (!show) hideTip(); else fitDropdowns(); }
+function fitDropdowns() { [$('#results'), $('#filterPanel')].forEach(b => b.style.maxHeight = ''); }   // sizes come from the CSS (the floating search window sizes itself from the visible area)
+/* Small screens: while searching, the search box and its results float over the page and always match the area the keyboard leaves free.
+   The page itself is never scrolled, so nothing jumps and the box can never end up under the keyboard. */
+let sSpacer = null;
+function layoutSearch() {
+  const v = window.visualViewport, st = document.documentElement.style;
+  st.setProperty('--vl', (v ? v.offsetLeft : 0) + 'px'); st.setProperty('--vt', (v ? v.offsetTop : 0) + 'px');
+  st.setProperty('--vw', (v ? v.width : innerWidth) + 'px'); st.setProperty('--vh', (v ? v.height : innerHeight) + 'px');
 }
-function showSearchBlock() {                    // bring the search box to the top of the screen so its drop-down has room
-  if (!NARROW()) return;
-  document.body.classList.add('searchpad');          // spare room under the page so a short page can still scroll that far
-  const hd = document.querySelector('header'), top = hd ? hd.getBoundingClientRect().bottom : 0;   // put the search box right under the title bar
-  scrollBy(0, $('.searchwrap').getBoundingClientRect().top - top - 6);
-  fitDropdowns();
+const searching = () => document.body.classList.contains('searching');
+function enterSearch() {
+  if (!NARROW() || searching()) return;
+  const w = $('.searchwrap'); sSpacer = document.createElement('div'); sSpacer.style.height = w.offsetHeight + 'px'; w.before(sSpacer);   // keeps the page from shifting
+  layoutSearch(); document.body.classList.add('searching');
 }
-if (window.visualViewport) visualViewport.addEventListener('resize', () => { if (resultsOpen || panelOpen()) showSearchBlock(); });
+function exitSearch() {
+  if (!searching()) return;
+  document.body.classList.remove('searching'); if (sSpacer) { sSpacer.remove(); sSpacer = null; }
+  const ae = document.activeElement; if (ae && ae.id === 'search') ae.blur();
+  resultsOpen = false; if (panelOpen()) setFilterPanel(false); else updateResultsVis();
+}
+if (window.visualViewport) ['resize', 'scroll'].forEach(n => visualViewport.addEventListener(n, () => { if (searching()) layoutSearch(); }));
+addEventListener('resize', () => { if (!NARROW()) exitSearch(); });
+{ const sh = document.createElement('div'); sh.id = 'sHead'; sh.innerHTML = '<span>Search</span><button type="button" id="sClose">Close</button>'; $('.searchwrap').prepend(sh);
+  const bk = document.createElement('div'); bk.id = 'sbk'; document.body.appendChild(bk); }
 function setFilterPanel(open) {                 // the filter panel floats over the content below
   const was = panelOpen();
   $('#filterPanel').classList.toggle('open', open);
-  if (open) resultsOpen = false;
+  if (open) resultsOpen = false; else if (was && searching()) resultsOpen = true;     // closing the panel inside the floating window shows the results again
   updateResultsVis();
-  if (open) setTimeout(showSearchBlock, 0);
+  if (open) enterSearch();
   if (!open && was && filtersDirty) { filtersDirty = false; doSearch(false); }   // closing the panel applies the chosen filters
 }
 const searchCache = new Map();
@@ -1271,16 +1297,17 @@ $('#results').addEventListener('mouseover', ev => {
 let lpT = null, lpDone = false;                 // touch: press and hold a card to read it (a quick tap adds one copy)
 $('#results').addEventListener('touchstart', ev => {
   const row = ev.target.closest('.ri'); lpDone = false; clearTimeout(lpT); if (!row) return;
-  lpT = setTimeout(() => { lpDone = true; const c = lastResults[+row.dataset.i]; if (c) openInfo(c, false); }, 300);
+  lpT = setTimeout(() => { lpDone = true; document.body.classList.add('nosel'); const c = lastResults[+row.dataset.i]; if (c) openInfo(c, false); }, 300);
 }, { passive: true });
 ['touchend', 'touchmove', 'touchcancel'].forEach(n => $('#results').addEventListener(n, () => clearTimeout(lpT), { passive: true }));
+['touchend', 'touchcancel'].forEach(n => document.addEventListener(n, () => { if (document.body.classList.contains('nosel')) setTimeout(() => { document.body.classList.remove('nosel'); const s = getSelection(); if (s) s.removeAllRanges(); }, 400); }, { passive: true }));   // the text becomes selectable again once the finger is up
 $('#results').addEventListener('contextmenu', ev => { if (ev.target.closest('.ri')) ev.preventDefault(); });
 $('#results').addEventListener('mouseleave', hideTip);
 $('#results').addEventListener('scroll', hideTip);
 $('#results').addEventListener('click', hideTip);
 $('#search').addEventListener('input', e => { resultsOpen = true; clearTimeout(searchT); searchT = setTimeout(() => doSearch(false), 300); });
-$('#search').addEventListener('keydown', e => { if (e.key === 'Escape') { resultsOpen = false; updateResultsVis(); } });
-const openResults = () => { setFilterPanel(false); resultsOpen = true; updateResultsVis(); setTimeout(showSearchBlock, 0); };
+$('#search').addEventListener('keydown', e => { if (e.key === 'Escape') { if (searching()) exitSearch(); else { resultsOpen = false; updateResultsVis(); } } });
+const openResults = () => { enterSearch(); setFilterPanel(false); resultsOpen = true; updateResultsVis(); };
 $('#search').addEventListener('focus', openResults);
 $('#search').addEventListener('click', openResults);
 document.addEventListener('click', ev => {
@@ -1300,6 +1327,7 @@ document.addEventListener('click', ev => {
   }
   if (t.id === 'btnGrant') { grantAccess(); return; }
   if (t.id === 'modal' || t.closest('#modalX')) { closeModal(); return; }
+  if (t.id === 'sbk' || t.id === 'sClose') { exitSearch(); return; }
   if (panelOpen() && !t.closest('#filterPanel') && !t.closest('#btnFilter')) setFilterPanel(false);
   if (!t.closest('.searchwrap')) { resultsOpen = false; updateResultsVis(); }
 
