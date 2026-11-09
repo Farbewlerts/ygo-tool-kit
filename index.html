@@ -99,6 +99,8 @@ button:disabled{opacity:.35;cursor:not-allowed}
 #results .rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;padding:10px}
 #results .rc{position:relative;cursor:pointer;border-radius:4px;transition:transform .12s,opacity .12s}
 @media(hover:hover){#results .rc:hover{transform:translateY(-2px)}}
+body.searchpad{padding-bottom:80vh}
+@media(max-width:620px){#results .rgrid{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;padding:8px}#results .rc .badge{font-size:11px;padding:0 4px;border-radius:5px}#results .rc .gban{width:17px;height:17px;font-size:10px;left:2px;top:2px}}
 #results .rc img{width:100%;aspect-ratio:421/614;object-fit:cover;display:block;border-radius:4px;background:#08203a;box-shadow:0 2px 8px rgba(0,0,0,.5)}
 #results .rc.full{opacity:.45}
 #results .rc .badge[hidden]{display:none}
@@ -1105,17 +1107,19 @@ let filters = newFilters(), frameMode = 'OR';
 let searchT, searchCtl, lastResults = [], shown = PAGE;
 const panelOpen = () => $('#filterPanel').classList.contains('open');
 let resultsOpen = false, filtersDirty = false;     // results list is only visible while the search box is in use
-function updateResultsVis() { const box = $('#results'); const show = resultsOpen && !panelOpen() && box.innerHTML; box.style.display = show ? 'block' : 'none'; if (!show) hideTip(); else fitDropdowns(); }
+function updateResultsVis() { const box = $('#results'); const show = resultsOpen && !panelOpen() && box.innerHTML; box.style.display = show ? 'block' : 'none'; if (!show) hideTip(); else fitDropdowns(); document.body.classList.toggle('searchpad', NARROW() && (!!show || panelOpen())); }
 function fitDropdowns() {                       // small screens: the drop-downs only use the room left above the keyboard / bottom edge and scroll inside
   const boxes = [$('#results'), $('#filterPanel')];
   if (!NARROW()) { boxes.forEach(b => b.style.maxHeight = ''); return; }
   const vv = window.visualViewport ? visualViewport.height : innerHeight;
-  const room = Math.floor(vv - Math.max(0, $('.searchwrap').getBoundingClientRect().bottom) - 16);
-  boxes.forEach(b => b.style.maxHeight = Math.max(150, Math.min(room, 480, Math.round(vv * .55))) + 'px');
+  const room = Math.floor(vv - Math.max(0, $('.searchwrap').getBoundingClientRect().bottom) - 16 - 64);   // 64px kept free for the limit pop-up at the bottom
+  boxes.forEach(b => b.style.maxHeight = Math.max(150, Math.min(room, 480)) + 'px');
 }
 function showSearchBlock() {                    // bring the search box to the top of the screen so its drop-down has room
   if (!NARROW()) return;
-  $('.searchwrap').scrollIntoView({ block: 'start' });
+  document.body.classList.add('searchpad');          // spare room under the page so a short page can still scroll that far
+  const hd = document.querySelector('header'), top = hd ? hd.getBoundingClientRect().bottom : 0;   // put the search box right under the title bar
+  scrollBy(0, $('.searchwrap').getBoundingClientRect().top - top - 6);
   fitDropdowns();
 }
 if (window.visualViewport) visualViewport.addEventListener('resize', () => { if (resultsOpen || panelOpen()) showSearchBlock(); });
@@ -1267,7 +1271,7 @@ $('#results').addEventListener('mouseover', ev => {
 let lpT = null, lpDone = false;                 // touch: press and hold a card to read it (a quick tap adds one copy)
 $('#results').addEventListener('touchstart', ev => {
   const row = ev.target.closest('.ri'); lpDone = false; clearTimeout(lpT); if (!row) return;
-  lpT = setTimeout(() => { lpDone = true; const c = lastResults[+row.dataset.i]; if (c) openInfo(c, false); }, 500);
+  lpT = setTimeout(() => { lpDone = true; const c = lastResults[+row.dataset.i]; if (c) openInfo(c, false); }, 300);
 }, { passive: true });
 ['touchend', 'touchmove', 'touchcancel'].forEach(n => $('#results').addEventListener(n, () => clearTimeout(lpT), { passive: true }));
 $('#results').addEventListener('contextmenu', ev => { if (ev.target.closest('.ri')) ev.preventDefault(); });
