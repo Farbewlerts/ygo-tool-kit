@@ -131,8 +131,8 @@ button:disabled{opacity:.35;cursor:not-allowed}
 .ban{display:inline-block;margin-left:8px;padding:0 8px;border-radius:99px;font-size:11px;font-weight:700;color:#fff;vertical-align:1px}
 .ban.b0{background:#333}.ban.b1{background:#e0312b}.ban.b2{background:#f28c1c;color:#1b1500}
 .ban.over{outline:2px solid #ff6b63;outline-offset:1px}
-.gban{position:absolute;left:4px;top:4px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;line-height:1;color:#fff;border:2px solid #000;box-shadow:0 1px 4px rgba(0,0,0,.7);text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000}
-.gban.b0{background:#333}.gban.b1{background:#e0312b}.gban.b2{background:#f28c1c}
+.gban{position:absolute;left:3px;top:3px;width:30px;height:30px;font-size:0;color:transparent;text-shadow:none;border:0;background:center/contain no-repeat;filter:drop-shadow(0 1px 2px rgba(0,0,0,.7))}
+.gban.b0{background-image:url(data:image/png;base64,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)}.gban.b1{background-image:url(data:image/png;base64,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)}.gban.b2{background-image:url(data:image/png;base64,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)}
 /* deck rows */
 .zonehead{display:flex;align-items:center;gap:10px;margin:0 0 6px}
 .zonehead h2{margin:0}
@@ -396,6 +396,65 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
 .slog .n{color:var(--muted);margin-right:6px}
 @media(max-width:620px){.sov{padding:10px}#pane-solo section.panel{padding:8px}#pane-solo .stb button{flex:1 1 calc(25% - 8px);padding-left:2px;padding-right:2px;white-space:nowrap;font-size:14px}}
 .sov{padding:calc(128px + env(safe-area-inset-top,0px)) 14px calc(96px + env(safe-area-inset-bottom,0px))!important}
+
+/* ===== round 4: pop-ups, landscape Solo, big-screen layouts ===== */
+/* card window: sizes itself to its text, centred, grows up and down to the limits, then scrolls */
+#modal .box{height:auto;max-height:min(86vh,640px);max-height:min(86dvh,640px)}
+#modal .desc{flex:0 1 auto}
+#modal .mhd{min-width:0}
+@media(max-height:560px){#modal .box{max-height:92vh;max-height:92dvh}}
+@media(min-width:900px) and (min-height:540px){
+  #modal .box{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);column-gap:28px;align-content:start;width:min(860px,calc(100vw - 48px));height:min(560px,calc(100vh - 48px));height:min(560px,calc(100dvh - 48px));max-height:none;padding:28px}
+  #modal .mtop{display:contents}
+  #modal .mimg{grid-column:1;grid-row:1 / span 2;width:min(300px,34vw);margin:0;align-self:start}
+  #modal .mhd{grid-column:2;grid-row:1;padding-right:36px;margin-bottom:12px}
+  #modal .desc{grid-column:2;grid-row:2;min-height:0;font-size:15px;line-height:1.6;padding-right:6px}
+  #modal h3.mt{font-size:26px;line-height:1.25;margin-bottom:6px}
+  #modal .stats{font-size:14px;margin-bottom:0}
+  #modal .box.noimg{display:flex;width:min(560px,calc(100vw - 48px));height:auto;max-height:min(560px,calc(100dvh - 48px))}
+  #modal .box.noimg .mhd{margin-bottom:10px}
+}
+/* Solo pop-ups on big screens: roomier, bigger card pictures */
+@media(min-width:900px) and (min-height:540px){
+  .sov{padding:28px!important}
+  .slist{width:min(840px,100%);padding:0 20px 18px}
+  .slist h4{margin:0 -20px 14px}
+  .sgrid{grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+  .smenu{width:min(360px,100%)}
+  .slog{width:min(540px,100%)}
+}
+/* Phone held sideways: nothing wastes the short height */
+@media(orientation:landscape) and (max-height:500px){
+  .sov{padding:8px 14px!important}
+}
+/* Solo on a phone held sideways: buttons in a column on the left, board and hand fill the rest, no page scroll */
+@media(orientation:landscape) and (max-height:500px) and (max-width:1000px){
+  header{padding:0 max(12px,env(safe-area-inset-left)) 0 max(12px,env(safe-area-inset-right));gap:0 16px;align-items:center}
+  header h1{font-size:15px;padding:6px 0}
+  .tab{padding:6px 12px;font-size:13px}
+  #pane-solo.on{display:grid;grid-template-columns:106px minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;column-gap:8px;row-gap:6px;box-sizing:border-box;height:calc(100vh - var(--hh,44px));height:calc(100dvh - var(--hh,44px));max-width:none;padding:6px max(10px,env(safe-area-inset-right)) 6px max(10px,env(safe-area-inset-left))}
+  #pane-solo>section.panel{margin:0;padding:6px}
+  #pane-solo>section.panel:nth-of-type(1){grid-column:1;grid-row:1 / span 2;overflow-y:auto;overscroll-behavior:contain;min-height:0}
+  #pane-solo .stb{flex-direction:column;align-items:stretch;gap:6px}
+  #pane-solo .stb button{flex:none;width:100%;padding:7px 4px;min-height:0;font-size:14px;white-space:nowrap}
+  #soloInfo,#soloNote{font-size:11px;line-height:1.3;word-break:break-word}
+  #soloBoardWrap{grid-column:2;grid-row:1;display:flex;align-items:center;justify-content:center;min-height:0;overflow:hidden;padding:4px}
+  #pane-solo>section.panel:nth-of-type(3){grid-column:2;grid-row:2;padding:2px 4px}
+  #soloBoard{column-gap:var(--cg,calc(var(--cw)*.5));row-gap:calc(var(--cw)*.14);padding:calc(var(--cw)*.1) 0}
+  #soloHandBox{padding-bottom:0}
+  .hand{padding:4px 6px;min-height:calc(var(--hw)*1.46 + 8px)}
+  #soloHint.on{position:fixed;left:calc(122px + env(safe-area-inset-left));right:10px;top:calc(var(--hh,44px) + 6px);margin:0;max-width:none;padding:4px 10px;text-align:center;background:rgba(2,16,31,.92);border:1px solid #ffd66b;border-radius:6px;z-index:30;pointer-events:none}
+}
+/* Draw Simulator: hand cards the same size as the deck cards, 5 per row, centred */
+@media(min-width:621px){
+  .handgrid{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+  .handgrid .scell{flex:0 0 calc((100% - 32px)/5)}
+}
+/* Hand Odds: one centred block, starting at the top, growing downwards */
+@media(min-width:900px){
+  #pane-odds.on{display:flex;justify-content:center;align-items:flex-start}
+  #pane-odds>section.panel{width:min(780px,100%);margin:0}
+}
 </style>
 </head>
 <body>
@@ -960,6 +1019,7 @@ function moveOne(e) {
   e.qty--;
   if (e.qty <= 0) state.entries = state.entries.filter(x => x !== e);
   render();
+  toast(`Moved "${e.card.name}" from ${ZN[e.zone]} to ${ZN[target]}`);
 }
 
 /* ---------- tags ---------- */
@@ -983,7 +1043,7 @@ function renderTags() {
   const main = state.entries.filter(e => e.zone === 'main');
   if (tagMode && !state.tags.includes(tagMode)) tagMode = null;
   document.body.classList.toggle('tagmode', !!tagMode);
-  const tb = $('#tmName'); if (tb) tb.textContent = tagMode || '';
+  const tb = $('#tmName'); if (tb) tb.textContent = tagMode ? `${tagMode} (${tagCount(tagMode)})` : '';
   const cnt = t => main.filter(e => e.tags.includes(t)).reduce((s, e) => s + e.qty, 0);
   $('#taglist').innerHTML = state.tags.length ? tagsSorted().map(t => { const n = cnt(t);
     return `<span class="tagchip${t === tagMode ? ' on' : ''}" style="--h:${hue(t)}"><span class="tm" data-tm="${esc(t)}" title="Click to tag cards with this tag">${esc(t)} <b>${n}</b></span><button data-deltag="${esc(t)}" title="Delete tag">✕</button></span>`;
@@ -1067,7 +1127,7 @@ function openInfo(c, withImg) {                   // fixed-size card window: clo
   box.className = 'box' + (withImg ? '' : ' noimg');
   box.innerHTML = `<button id="modalX" type="button" aria-label="Close">✕</button>
     <div class="mtop">${withImg ? `<img class="mimg" data-cid="${c.id}" data-url="${esc(c.img)}" alt="">` : ''}
-    <h3 class="mt">${esc(c.name)}</h3><div class="stats">${esc(c.type)} — ${esc(cardStats(c))}</div></div>
+    <div class="mhd"><h3 class="mt">${esc(c.name)}</h3><div class="stats">${esc(c.type)} — ${esc(cardStats(c))}</div></div></div>
     <div class="desc">${esc(c.desc)}</div>`;
   const ae = document.activeElement; if (ae && ae.id === 'search') ae.blur();   // keep the on-screen keyboard from covering the window
   $('#modal').style.display = 'flex';
@@ -2128,7 +2188,23 @@ function draw() {
   if (S.list) openList(S.list);
   phase();
 }
+const LANDQ = '(orientation: landscape) and (max-height: 500px) and (max-width: 1000px)';
+function fitLand() {                                  // phone held sideways: buttons left, board + hand fill the rest, no page scroll
+  setHH();
+  const wrap = $('#soloBoardWrap'), bd = $('#soloBoard'), hand = $('#soloHandBox').closest('section');
+  const cs = getComputedStyle(pane), H = pane.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom), W = wrap.clientWidth - 12;
+  if (H < 100 || W < 100) return;
+  const set = cw => { pane.style.setProperty('--cw', cw + 'px'); pane.style.setProperty('--hw', cw * 1.1 + 'px'); };
+  const need = () => bd.offsetHeight + 8 + hand.offsetHeight + 6;
+  set(40); const n1 = need(); set(60); const n2 = need();
+  const k = (n2 - n1) / 20, c0 = n1 - k * 40;
+  const cw = Math.max(24, Math.min((H - c0 - 1) / k, W / 8.2, 112));
+  set(cw);
+  pane.style.setProperty('--cg', Math.max(cw * .4, Math.min(cw * 1.3, (W - 7 * cw) / 6)) + 'px');
+}
 function fit() {
+  if (matchMedia(LANDQ).matches) { fitLand(); return; }
+  pane.style.removeProperty('--cg');
   const w = $('#soloBoardWrap').clientWidth - 24; if (w < 100) return;
   const set = cw => { pane.style.setProperty('--cw', cw + 'px'); pane.style.setProperty('--hw', Math.min(110, Math.max(innerWidth >= 900 ? 40 : 64, cw * 1.25)) + 'px'); };
   const top = Math.min(w / 10.05, 112);
@@ -2300,8 +2376,8 @@ function deckMenu() {
     ['View', () => openList('deck')], ['Banish Top Card', () => banMenu(top(), deckMenu), 1],
     ['Send Top Card To GY', () => toZone(top(), 'gy', 'u', 'To GY (Top Of Deck)')]]);
 }
-function drawCard() { if (!S.Z.deck.length) { toast('The deck is empty.'); return; } const u = S.Z.deck.shift(); S.Z.hand.unshift(u); S.P[u] = 'u'; commit('Draw: ' + cc(u).name); }
-function shuffle() { if (S.Z.deck.length < 2) return; shuffleArr(S.Z.deck); commit('Shuffle Deck'); }
+function drawCard() { if (!S.Z.deck.length) { toast('The deck is empty.'); return; } const u = S.Z.deck.shift(); S.Z.hand.unshift(u); S.P[u] = 'u'; commit('Draw: ' + cc(u).name); toast('Drew: ' + cc(u).name); }
+function shuffle() { if (S.Z.deck.length < 2) { toast('Not enough cards in the deck to shuffle.'); return; } shuffleArr(S.Z.deck); commit('Shuffle Deck'); toast('Deck shuffled'); }
 
 /* ----- game: the deck always comes from the Deck Builder ----- */
 const deckEnts = () => (state.entries || []).filter(e => (e.zone === 'main' || e.zone === 'extra') && e.qty > 0);
@@ -2340,7 +2416,7 @@ pane.addEventListener('click', e => {
     const k = b.dataset.b;
     if (k === 'new') { if (S.started && S.idx > 0 && !confirm('Start a new game? The current board will be lost.')) return; newGame(); return; }
     if (!S.started) return;
-    if (k === 'reset') { if (S.hist.length < 2) return; if (!confirm('Reset to the start of this game?')) return; S.hist.length = 1; restore(0); }
+    if (k === 'reset') { if (S.hist.length < 2) return; if (!confirm('Reset to the start of this game?')) return; S.hist.length = 1; restore(0); toast('Reset to the start of the game'); }
     else if (k === 'draw') drawCard(); else if (k === 'shuffle') shuffle(); else if (k === 'token') startToken(); else if (k === 'undo') { if (S.idx > 0) restore(S.idx - 1); }
     else if (k === 'redo') { if (S.idx < S.hist.length - 1) restore(S.idx + 1); } else if (k === 'log') openLog();
     return;
