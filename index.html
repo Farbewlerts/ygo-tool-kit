@@ -458,7 +458,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
 
 /* ===== round 5 ===== */
 /* Deck Builder on a phone held upright: deck bar, tags, search, picture preview, then the list */
-@media(max-width:620px){
+@media(max-width:620px),(orientation:landscape) and (max-height:500px) and (max-width:1000px){
   #pane-deck.on{display:flex;flex-direction:column}
   #pane-deck .cols,#pane-deck .left,#pane-deck .right{display:contents}
   #pane-deck #deckbar{order:0}
