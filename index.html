@@ -253,7 +253,7 @@ body{-webkit-tap-highlight-color:transparent}
 #sHead{display:none}
 body.nosel,body.nosel *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
 body.searching #sbk{display:block}
-body.searching .searchwrap{position:fixed;left:calc(var(--vl,0px) + 8px);top:calc(var(--vt,0px) + 8px);width:calc(var(--vw,100vw) - 16px);max-height:calc(var(--vh,100vh) - 16px);z-index:46;display:flex;flex-direction:column;box-sizing:border-box;padding:10px;background:var(--panel);border:1px solid var(--accent2);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.6);overscroll-behavior:contain}
+body.searching .searchwrap{position:fixed;left:calc(var(--vl,0px) + 8px);top:calc(var(--vt,0px) + 8px);width:calc(var(--vw,100vw) - 16px);max-height:var(--pmax,calc(var(--vh,100vh) - 16px));z-index:46;display:flex;flex-direction:column;box-sizing:border-box;padding:10px;background:var(--panel);border:1px solid var(--accent2);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.6);overscroll-behavior:contain}
 body.searching #sHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:700}
 body.searching #sHead button{padding:4px 14px}
 body.searching .searchwrap #results,body.searching .searchwrap .fpanel{position:static;margin-top:8px;max-height:none!important;flex:1 1 auto;min-height:0;box-shadow:none}
@@ -430,9 +430,9 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
 /* Solo on a phone held sideways: buttons in a column on the left, board and hand fill the rest, no page scroll */
 @media(orientation:landscape) and (max-height:500px) and (max-width:1000px){
   header{padding:0 max(12px,env(safe-area-inset-left)) 0 max(12px,env(safe-area-inset-right));gap:0 16px;align-items:center}
-  header h1{font-size:15px;padding:6px 0}
-  .tab{padding:6px 12px;font-size:13px}
-  #pane-solo.on{display:grid;grid-template-columns:106px minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;column-gap:8px;row-gap:6px;box-sizing:border-box;height:calc(100vh - var(--hh,44px));height:calc(100dvh - var(--hh,44px));max-width:none;padding:6px max(10px,env(safe-area-inset-right)) 6px max(10px,env(safe-area-inset-left))}
+  header h1{font-size:16px;padding:13px 0}
+  .tab{padding:13px 14px;font-size:14px}
+  #pane-solo.on{display:grid;grid-template-columns:106px minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;column-gap:8px;row-gap:6px;box-sizing:border-box;height:calc(100vh - var(--hh,44px));height:calc(100dvh - var(--hh,44px));max-width:none;padding:6px max(10px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}
   #pane-solo>section.panel{margin:0;padding:6px}
   #pane-solo>section.panel:nth-of-type(1){grid-column:1;grid-row:1 / span 2;overflow-y:auto;overscroll-behavior:contain;min-height:0}
   #pane-solo .stb{flex-direction:column;align-items:stretch;gap:6px}
@@ -454,6 +454,29 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
 @media(min-width:900px){
   #pane-odds.on{display:flex;justify-content:center;align-items:flex-start}
   #pane-odds>section.panel{width:min(780px,100%);margin:0}
+}
+
+/* ===== round 5 ===== */
+/* Deck Builder on a phone held upright: deck bar, tags, search, picture preview, then the list */
+@media(max-width:620px){
+  #pane-deck.on{display:flex;flex-direction:column}
+  #pane-deck .cols,#pane-deck .left,#pane-deck .right{display:contents}
+  #pane-deck #deckbar{order:0}
+  #pane-deck .left>section:nth-of-type(1){order:1}
+  #pane-deck .left>section:nth-of-type(2){order:2}
+  #pane-deck .right>section{order:3;margin-bottom:12px!important}
+  #pane-deck .left>section:nth-of-type(n+3){order:4}
+}
+/* Draw Simulator on a phone held sideways: two halves like the desktop */
+@media(orientation:landscape) and (max-height:500px) and (max-width:1000px){
+  #pane-sim .cols{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+  #pane-sim .right{order:0;position:sticky;top:calc(var(--hh,48px) + 8px);max-height:calc(100vh - var(--hh,48px) - 16px);max-height:calc(100dvh - var(--hh,48px) - 16px);overflow:auto}
+  #pane-deck,#pane-sim,#pane-odds{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}
+}
+/* card window on big screens: its height follows the picture, so there is no empty strip underneath */
+@media(min-width:900px) and (min-height:540px){
+  #modal .box{--iw:min(300px,34vw,calc((100vh - 104px)/1.4586));--iw:min(300px,34vw,calc((100dvh - 104px)/1.4586));height:calc(var(--iw)*1.4586 + 56px)}
+  #modal .mimg{width:var(--iw)}
 }
 </style>
 </head>
@@ -1192,6 +1215,12 @@ function layoutSearch() {
   const v = window.visualViewport, st = document.documentElement.style;
   st.setProperty('--vl', (v ? v.offsetLeft : 0) + 'px'); st.setProperty('--vt', (v ? v.offsetTop : 0) + 'px');
   st.setProperty('--vw', (v ? v.width : innerWidth) + 'px'); st.setProperty('--vh', (v ? v.height : innerHeight) + 'px');
+  // How tall the sheet may be. Safari reports the area above the keyboard, but a home-screen app can report the full screen,
+  // so while a text box is focused the sheet is also capped to a share of the screen that always stays above keyboard + form bar.
+  const ae = document.activeElement, typing = !!ae && /^(INPUT|TEXTAREA)$/.test(ae.tagName), avail = v ? v.height : innerHeight;
+  let mh = avail - 16 - (innerHeight - avail > 120 ? 56 : 0);
+  if (typing) mh = Math.min(mh, innerHeight * (innerWidth > innerHeight ? 0.38 : 0.52));
+  st.setProperty('--pmax', Math.max(160, Math.round(mh)) + 'px');
 }
 const searching = () => document.body.classList.contains('searching');
 function enterSearch() {
@@ -1205,6 +1234,7 @@ function exitSearch() {
   const ae = document.activeElement; if (ae && ae.id === 'search') ae.blur();
   resultsOpen = false; if (panelOpen()) setFilterPanel(false); else updateResultsVis();
 }
+['focusin', 'focusout'].forEach(n => document.addEventListener(n, () => { [30, 250, 600].forEach(t => setTimeout(() => { if (searching()) layoutSearch(); }, t)); }));
 if (window.visualViewport) ['resize', 'scroll'].forEach(n => visualViewport.addEventListener(n, () => { if (searching()) layoutSearch(); }));
 addEventListener('resize', () => { if (!NARROW()) exitSearch(); });
 { const sh = document.createElement('div'); sh.id = 'sHead'; sh.innerHTML = '<span>Search</span><button type="button" id="sClose">Close</button>'; $('.searchwrap').prepend(sh);
@@ -2222,6 +2252,8 @@ function fit() {
   }
 }
 addEventListener('resize', fit);
+addEventListener('orientationchange', () => [60, 300, 800].forEach(t => setTimeout(fit, t)));
+if (window.ResizeObserver) new ResizeObserver(() => { if (matchMedia(LANDQ).matches) fit(); }).observe(pane);
 
 /* ----- popups ----- */
 const closeMenu = () => $('#soloMenu').classList.remove('on');
