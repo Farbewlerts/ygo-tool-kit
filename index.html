@@ -253,7 +253,7 @@ body{-webkit-tap-highlight-color:transparent}
 #sHead{display:none}
 body.nosel,body.nosel *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
 body.searching #sbk{display:block}
-body.searching .searchwrap{position:fixed;left:calc(var(--vl,0px) + 8px);top:calc(var(--vt,0px) + 8px);width:calc(var(--vw,100vw) - 16px);max-height:var(--pmax,calc(var(--vh,100vh) - 16px));z-index:46;display:flex;flex-direction:column;box-sizing:border-box;padding:10px;background:var(--panel);border:1px solid var(--accent2);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.6);overscroll-behavior:contain}
+body.searching .searchwrap{position:fixed;left:calc(var(--vl,0px) + 8px);top:calc(var(--vt,0px) + var(--ptop,8px));width:calc(var(--vw,100vw) - 16px);max-height:var(--pmax,calc(var(--vh,100vh) - 16px));z-index:46;display:flex;flex-direction:column;box-sizing:border-box;padding:10px;background:var(--panel);border:1px solid var(--accent2);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.6);overscroll-behavior:contain}
 body.searching #sHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:700}
 body.searching #sHead button{padding:4px 14px}
 body.searching .searchwrap #results,body.searching .searchwrap .fpanel{position:static;margin-top:8px;max-height:none!important;flex:1 1 auto;min-height:0;box-shadow:none}
@@ -457,8 +457,8 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
 }
 
 /* ===== round 5 ===== */
-/* Deck Builder on a phone held upright: deck bar, tags, search, picture preview, then the list */
-@media(max-width:620px),(orientation:landscape) and (max-height:500px) and (max-width:1000px){
+/* Deck Builder in the one-column layout (phones, iPad upright): deck bar, tags, search, picture preview, then the list */
+@media(max-width:960px){
   #pane-deck.on{display:flex;flex-direction:column}
   #pane-deck .cols,#pane-deck .left,#pane-deck .right{display:contents}
   #pane-deck #deckbar{order:0}
@@ -1218,8 +1218,12 @@ function layoutSearch() {
   // How tall the sheet may be. Safari reports the area above the keyboard, but a home-screen app can report the full screen,
   // so while a text box is focused the sheet is also capped to a share of the screen that always stays above keyboard + form bar.
   const ae = document.activeElement, typing = !!ae && /^(INPUT|TEXTAREA)$/.test(ae.tagName), avail = v ? v.height : innerHeight;
-  let mh = avail - 16 - (innerHeight - avail > 120 ? 56 : 0);
-  if (typing) mh = Math.min(mh, innerHeight * (innerWidth > innerHeight ? 0.38 : 0.52));
+  // a home-screen app draws under the status bar (clock, battery): start the sheet below it, or its header row is hidden
+  let pr = document.getElementById('satProbe');
+  if (!pr) { pr = document.createElement('div'); pr.id = 'satProbe'; pr.style.cssText = 'position:fixed;left:0;top:0;width:0;height:env(safe-area-inset-top,0px);visibility:hidden;pointer-events:none'; document.body.appendChild(pr); }
+  const ptop = Math.max(8, pr.offsetHeight + 6); st.setProperty('--ptop', ptop + 'px');
+  let mh = avail - ptop - 8 - (innerHeight - avail > 120 ? 56 : 0);
+  if (typing) mh = Math.min(mh, innerHeight * (innerWidth > innerHeight ? 0.40 : 0.66) - ptop);
   st.setProperty('--pmax', Math.max(160, Math.round(mh)) + 'px');
 }
 const searching = () => document.body.classList.contains('searching');
