@@ -478,6 +478,24 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
   #modal .box{--iw:min(300px,34vw,calc((100vh - 104px)/1.4586));--iw:min(300px,34vw,calc((100dvh - 104px)/1.4586));height:calc(var(--iw)*1.4586 + 56px)}
   #modal .mimg{width:var(--iw)}
 }
+
+/* ===== replays ===== */
+#soloRp{display:none}
+#pane-solo.rp #soloRp{display:flex}
+#pane-solo.rp .stb:not(#soloRp),#pane-solo.rp #soloInfo,#pane-solo.rp #soloNote{display:none}
+#rpText{flex:0 0 auto;width:100%;font-size:13px;line-height:1.35;word-break:break-word}
+#rpText b{color:#ffd66b;margin-right:4px}
+.slog h4{padding-left:84px!important;padding-right:84px!important}
+.slog .sl{position:absolute;left:8px;top:8px;height:32px;padding:0 12px;min-height:0;border-radius:16px;border:0;background:rgba(0,0,0,.35);color:#fff;font-size:13px;cursor:pointer}
+.slog .rr{display:flex;flex-direction:column;gap:6px;padding:10px 0}
+.slog .rr b{font-size:14px;word-break:break-word}
+.slog .rr small{color:var(--muted)}
+.slog .rb{display:flex;flex-wrap:wrap;gap:6px;border-top:0;padding:0}
+.slog .rb button{padding:6px 12px;font-size:13px;min-height:0}
+.slog .ask{border-top:0;padding:14px 0 6px}
+.slog .ask p{margin:0 0 12px;font-size:14px;line-height:1.45}
+.slog .rj{cursor:pointer}
+.slog .rj.cur{color:#ffd66b;font-weight:700}
 </style>
 </head>
 <body>
@@ -619,6 +637,14 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
       <button data-b="redo" id="soloRedo">Redo</button>
       <button data-b="log">Log</button>
     </div>
+    <div class="stb" id="soloRp">
+      <div id="rpText"></div>
+      <button data-rp="prev">◀ Back</button>
+      <button data-rp="next">Next ▶</button>
+      <button data-rp="play" id="rpPlay">▶ Play</button>
+      <button data-rp="steps">Steps</button>
+      <button data-rp="exit" class="danger">Exit</button>
+    </div>
     <div id="soloInfo"></div>
     <div id="soloNote"></div>
     <div id="soloHint">Choose a highlighted zone. Tap anywhere else to cancel.</div>
@@ -628,6 +654,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
   <div class="sov" id="soloList"><div class="slist" id="soloListBox"><h4 id="slh"></h4><div class="sgrid" id="slg"></div></div></div>
   <div class="sov" id="soloMenu"><div class="smenu" id="soloMenuBox"></div></div>
   <div class="sov" id="soloLog"><div class="slog" id="soloLogBox"></div></div>
+<div class="sov" id="soloAsk"><div class="slog" id="soloAskBox"></div></div>
 </main>
 
 
@@ -2288,10 +2315,95 @@ $('#soloList').addEventListener('click', e => {
   if (e.target.id === 'soloList') closeList();
 });
 function openLog() {
-  $('#soloLogBox').innerHTML = '<h4>Log<button class="sx" data-x="1" aria-label="Close">✕</button></h4>' + (S.hist.length ? S.hist.slice(0, S.idx + 1).map((h, i) => ({ h, i })).reverse().map(o => `<div><span class="n">${o.i}.</span>${esc(o.h.t)}</div>`).join('') : '<div>No actions yet.</div>');
+  $('#soloLogBox').innerHTML = '<h4><button class="sl" data-rpl="1">Replays</button>Log<button class="sx" data-x="1" aria-label="Close">✕</button></h4>' + (S.hist.length ? S.hist.slice(0, S.idx + 1).map((h, i) => ({ h, i })).reverse().map(o => `<div><span class="n">${o.i}.</span>${esc(o.h.t)}</div>`).join('') : '<div>No actions yet.</div>');
   $('#soloLog').classList.add('on');
 }
 $('#soloLog').addEventListener('click', e => { if (e.target.id === 'soloLog' || e.target.closest('[data-x]')) e.currentTarget.classList.remove('on'); });
+
+/* ----- replays: a finished game (New Game or Reset after at least one action) is kept in this browser and can be watched step by step ----- */
+const R = { on: false, rec: null, i: 0, timer: 0, bak: null };
+let rdb = null;
+const rOpen = () => rdb || (rdb = new Promise((res, rej) => { const q = indexedDB.open('ygo-solo-replays', 1); q.onupgradeneeded = () => q.result.createObjectStore('r', { keyPath: 'id' }); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }));
+const rTx = async (mode, fn) => { const db = await rOpen(); return new Promise((res, rej) => { const t = db.transaction('r', mode), q = fn(t.objectStore('r')); t.oncomplete = () => res(q && q.result); t.onerror = () => rej(t.error); }); };
+const rAll = () => rTx('readonly', st => st.getAll()).then(a => a || []);
+const rPut = rec => rTx('readwrite', st => st.put(rec));
+const rDel = id => rTx('readwrite', st => st.delete(id));
+const KEEP = 30;
+async function prune() { const un = (await rAll()).filter(r => !r.pin).sort((a, b) => b.at - a.at); for (const r of un.slice(KEEP)) await rDel(r.id); }
+function askSave(n) {
+  return new Promise(res => {
+    const el = $('#soloAsk');
+    $('#soloAskBox').innerHTML = `<h4>Save a replay?</h4><div class="ask"><p>Keep this game (${n} step${n === 1 ? '' : 's'}) in Replays so you can watch the combo later.</p><div class="rb"><button class="primary" data-a="1">Yes</button><button data-a="0">No</button></div></div>`;
+    const h = e => { const b = e.target.closest('[data-a]'); if (!b) return; el.classList.remove('on'); el.removeEventListener('click', h); res(b.dataset.a === '1'); };
+    el.addEventListener('click', h); el.classList.add('on');
+  });
+}
+async function saveReplay() {
+  try {
+    if (!S.started || S.idx < 1) return;
+    const cards = {}; for (const u in S.C) { const c = S.C[u].c; cards[u] = c.type === 'Token' ? { ...c, img: '' } : c; }
+    const when = new Date().toLocaleString([], { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    const rec = { id: Date.now(), at: Date.now(), pin: false, name: (state.name || 'Untitled') + ' · ' + when, steps: S.hist.slice(0, S.idx + 1).map(h => ({ t: h.t, s: h.s })), cards };
+    if (!(await askSave(rec.steps.length - 1))) return;
+    rPut(rec).then(prune).then(() => toast('Replay saved.')).catch(() => { });
+  } catch (e) { }
+}
+function rpStop() { clearInterval(R.timer); R.timer = 0; const b = $('#rpPlay'); if (b) b.textContent = '▶ Play'; }
+function rpGo(i) {
+  const st = R.rec.steps; R.i = Math.max(0, Math.min(st.length - 1, i));
+  const o = JSON.parse(st[R.i].s); S.Z = o.Z; S.P = o.P; S.M = o.M || {};
+  $('#rpText').innerHTML = `<b>${R.i}/${st.length - 1}</b>${esc(st[R.i].t)}`;
+  if (R.i >= st.length - 1) rpStop();
+  draw();
+}
+function rpPlay() {
+  if (R.timer) { rpStop(); return; }
+  if (R.i >= R.rec.steps.length - 1) rpGo(0);
+  $('#rpPlay').textContent = '⏸ Pause'; R.timer = setInterval(() => rpGo(R.i + 1), 1100);
+}
+async function openReplay(id) {
+  let rec; try { rec = (await rAll()).find(r => r.id === id); } catch (e) { }
+  if (!rec) { toast('Replay not found.'); return; }
+  $('#soloLog').classList.remove('on'); closeList(); closeMenu();
+  if (!R.on) R.bak = { C: S.C, Z: S.Z, P: S.P, M: S.M, pl: S.pl };
+  S.pl = null; R.on = true; R.rec = rec; R.i = 0; S.list = null;
+  S.C = {}; for (const u in rec.cards) { const c = { ...rec.cards[u] }; if (c.type === 'Token') c.img = TOKEN_IMG; S.C[u] = { c }; }
+  try { await preload(Object.values(S.C).map(x => x.c).filter(c => c.type !== 'Token')); } catch (e) { }
+  pane.classList.add('rp'); fit(); rpGo(0);
+}
+function exitReplay() {
+  if (!R.on) return;
+  rpStop(); R.on = false; R.rec = null; Object.assign(S, R.bak); R.bak = null;
+  pane.classList.remove('rp'); $('#soloLog').classList.remove('on'); fit(); draw(); setNote();
+}
+function openSteps() {
+  $('#soloLogBox').innerHTML = '<h4>Replay steps<button class="sx" data-x="1" aria-label="Close">✕</button></h4>' + R.rec.steps.map((h, i) => `<div class="rj${i === R.i ? ' cur' : ''}" data-j="${i}"><span class="n">${i}.</span>${esc(h.t)}</div>`).join('');
+  $('#soloLog').classList.add('on'); const c = $('#soloLogBox .cur'); if (c) c.scrollIntoView({ block: 'center' });
+}
+async function openReplays() {
+  let all = []; try { all = await rAll(); } catch (e) { }
+  all.sort((a, b) => (b.pin - a.pin) || (b.at - a.at));
+  $('#soloLogBox').innerHTML = '<h4><button class="sl" data-log="1">Log</button>Replays<button class="sx" data-x="1" aria-label="Close">✕</button></h4>' + (all.length
+    ? all.map(r => `<div class="rr" data-id="${r.id}"><b>${r.pin ? '★ ' : ''}${esc(r.name)}</b><small>${r.steps.length - 1} steps</small><div class="rb"><button data-r="open">Watch</button><button data-r="pin">${r.pin ? 'Unpin' : 'Pin'}</button><button data-r="ren">Rename</button><button data-r="del">Delete</button></div></div>`).join('')
+    : '<div>No replays yet. A game is saved here when you press New Game or Reset after at least one action.</div>');
+  $('#soloLog').classList.add('on');
+}
+$('#soloLog').addEventListener('click', async e => {
+  const t = e.target;
+  if (t.closest('[data-rpl]')) { openReplays(); return; }
+  if (t.closest('[data-log]')) { openLog(); return; }
+  const j = t.closest('[data-j]'); if (j) { $('#soloLog').classList.remove('on'); rpGo(+j.dataset.j); return; }
+  const b = t.closest('[data-r]'); if (!b) return;
+  const id = +b.closest('.rr').dataset.id, k = b.dataset.r;
+  if (k === 'open') { openReplay(id); return; }
+  try {
+    const rec = (await rAll()).find(r => r.id === id); if (!rec) return;
+    if (k === 'pin') { rec.pin = !rec.pin; await rPut(rec); }
+    else if (k === 'ren') { const n = prompt('Replay name', rec.name); if (n === null || !n.trim()) return; rec.name = n.trim().slice(0, 80); await rPut(rec); }
+    else if (k === 'del') { if (!confirm('Delete this replay?')) return; await rDel(id); }
+  } catch (err) { toast('Could not update the replay.'); }
+  openReplays();
+});
 
 /* ----- card actions ----- */
 function toZone(u, to, pos, verb) {
@@ -2432,6 +2544,7 @@ async function newGame() {
   if (S.loading) return;
   const ents = deckEnts();
   if (!ents.length) { toast('Build a deck in the Deck Builder first.'); setNote(); return; }
+  await saveReplay();
   S.loading = true; setNote();
   try { await preload(ents.map(e => e.card)); } catch (e) { }
   S.C = {}; S.tc = 0; S.Z = emptyZ(); S.P = {}; S.M = {}; S.pl = null; S.list = null; closeList(); closeMenu(); let n = 0;
@@ -2442,17 +2555,20 @@ async function newGame() {
 }
 async function show() {
   fit();
+  if (R.on) return;
   if (!S.started && !S.loading && deckEnts().length) await newGame();
   setNote(); draw();
 }
 const cancelPlace = () => { S.pl = null; draw(); };
-pane.addEventListener('click', e => {
-  const t = e.target, b = t.closest('[data-b]');
+pane.addEventListener('click', async e => {
+  const t = e.target, b = t.closest('[data-b]'), rb = t.closest('[data-rp]');
+  if (rb) { const k = rb.dataset.rp; if (k === 'prev') { rpStop(); rpGo(R.i - 1); } else if (k === 'next') { rpStop(); rpGo(R.i + 1); } else if (k === 'play') rpPlay(); else if (k === 'steps') { rpStop(); openSteps(); } else if (k === 'exit') exitReplay(); return; }
+  if (R.on) return;
   if (b) {
     const k = b.dataset.b;
     if (k === 'new') { if (S.started && S.idx > 0 && !confirm('Start a new game? The current board will be lost.')) return; newGame(); return; }
     if (!S.started) return;
-    if (k === 'reset') { if (S.hist.length < 2) return; if (!confirm('Reset to the start of this game?')) return; S.hist.length = 1; restore(0); toast('Reset to the start of the game'); }
+    if (k === 'reset') { if (S.hist.length < 2) return; if (!confirm('Reset to the start of this game?')) return; await saveReplay(); S.hist.length = 1; restore(0); toast('Reset to the start of the game'); }
     else if (k === 'draw') drawCard(); else if (k === 'shuffle') shuffle(); else if (k === 'token') startToken(); else if (k === 'undo') { if (S.idx > 0) restore(S.idx - 1); }
     else if (k === 'redo') { if (S.idx < S.hist.length - 1) restore(S.idx + 1); } else if (k === 'log') openLog();
     return;
