@@ -480,11 +480,12 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
 }
 
 /* ===== replays ===== */
-#soloRp{display:none}
+#pane-solo #soloRp{display:none}
 #pane-solo.rp #soloRp{display:flex}
 #pane-solo.rp .stb:not(#soloRp),#pane-solo.rp #soloInfo,#pane-solo.rp #soloNote{display:none}
 #rpText{flex:0 0 auto;width:100%;font-size:13px;line-height:1.35;word-break:break-word}
 #rpText b{color:#ffd66b;margin-right:4px}
+#soloRp .ic{display:block;height:20px;width:auto;margin:0 auto;pointer-events:none}
 .slog h4{padding-left:84px!important;padding-right:84px!important}
 .slog .sl{position:absolute;left:8px;top:8px;height:32px;padding:0 12px;min-height:0;border-radius:16px;border:0;background:rgba(0,0,0,.35);color:#fff;font-size:13px;cursor:pointer}
 .slog .rr{display:flex;flex-direction:column;gap:6px;padding:10px 0}
@@ -494,6 +495,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
 .slog .rb button{padding:6px 12px;font-size:13px;min-height:0}
 .slog .ask{border-top:0;padding:14px 0 6px}
 .slog .ask p{margin:0 0 12px;font-size:14px;line-height:1.45}
+.slog .ask input{width:100%;box-sizing:border-box;margin:0 0 12px;padding:9px 10px;font-size:16px}
 .slog .rj{cursor:pointer}
 .slog .rj.cur{color:#ffd66b;font-weight:700}
 </style>
@@ -639,9 +641,9 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
     </div>
     <div class="stb" id="soloRp">
       <div id="rpText"></div>
-      <button data-rp="prev">◀ Back</button>
-      <button data-rp="next">Next ▶</button>
-      <button data-rp="play" id="rpPlay">▶ Play</button>
+      <button data-rp="prev" aria-label="Back"><img class="ic" id="rpIcL" alt=""></button>
+      <button data-rp="next" aria-label="Next"><img class="ic" id="rpIcR" alt=""></button>
+      <button data-rp="play" id="rpPlay" aria-label="Play"><img class="ic" id="rpIcP" alt=""></button>
       <button data-rp="steps">Steps</button>
       <button data-rp="exit" class="danger">Exit</button>
     </div>
@@ -2321,6 +2323,8 @@ function openLog() {
 $('#soloLog').addEventListener('click', e => { if (e.target.id === 'soloLog' || e.target.closest('[data-x]')) e.currentTarget.classList.remove('on'); });
 
 /* ----- replays: a finished game (New Game or Reset after at least one action) is kept in this browser and can be watched step by step ----- */
+const IC = {"l": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAFD0lEQVR42u2bW4gcRRSGv6ru3aAkIoK+eUGIgmBQs7JswISIYsD7g4b1goqISAQRQV3whoYg+iDrBUHfJCaaPJg8CMmLoojRgIqgUQxRDEaSoK6aDZjdnj4+zKn10M5MpufSM9szBcX0TvdsVf3n1H/O+bvbiQiD3DwD3oYADAHobXO9noPv8dgCpIMIQKwLj4HlxhtKD4DXhSbABcDHwAY9F5UdgGB1AR4C9gITwLFeboG4QJAT4CJgGrgKqCggUZk5IFg9BR4GPtfFJ/pdz8Nw3GWGT4CL1epr9VxFx03KmgfEJrQ9Anymi08UlIg+anGXrL4CeBlYk7F6aTNBa/XH1Opr+tXqnfQAa/VL1OpX9LvVO+UBsWHyKWCPLj6v1UM9cLLuupEtxm1a/TLgFWBVG1afVyDncgAWwE3brSXiFq5PdAKPA08Bo+a7KGclCHCm1gORAliv/Q38BfyTCaHO/Da3vOWalMS8QXpM9/qEsXo7JCdNXjOrIBwC9gGfAh8B+811kUm3OwJAQDdR608BT2Ss7nrIYXOaXW4B3gVmDBCVdgGw/+Ry3evjHbJ6K14QrgvdZeZwCHhV53m8aW8QkWx3IhLr8YiIPC0ic1Jt8yKSSv+0VEQS7aF9LyLXm7X4Gmtc6FkPsFYf1xx+3DBuP2uIkolC05qKVzIcVnML2L0+qvt8KsP6jsXRUpOHfADcAvxRDwQnIvbEKkVuzOy1xaoczwMjwBfANcDvtUDwRpvbqBLVmFrdLXLZfERBWAnsBpbVyn6diKwG3gAuNOiU6X5B8ISdwE1q7IWkyWuC8WsmzS1TC55wo2aviTWwjQIPAJuA0w1zupKAIKZuWAl8o+ur2Grrdd3/7xvWr5QEAGe8YdoQ/AIJBiI8AFwH3K+ho+Uiow9bWMtaYJ2uOcomQt7E0vOBl4AbupT+9qKFrf0JsBrw9WoBq9reBzwPnFESbggLvhT4ul64Sww3vKncsLNL3CAme7NkldY4Jx3yAgdMnizeW274SWPovcBvHeYGl5G8sjKYPed0Tgn/3VxpVQa8utEWqPejFDhXueHmDnHDrCo9jXIQB5wGLKmhYqUmZc+zNU8AK1zOh6QsN9wNvKCSVivcEESWF4FnNEQlDQBYBpwKnEf1btOE9rNrkJxromDywCSNauU63YtIpMfniMh2U4snOWr5ef18ztTueeeyVETWichmETmeYx7h/LO+xXIz1N0Htdy8CzjaIjfEarE4s9drda9jxPo5C+wC7qB6X+I1TXublcSWt1P0JGZCb2mKua2FSCE5egA/MWwe1Oj9wIMq4HzYpCS21HdAfAje8AuwHrgdOFxQFhlUoLD3Y+Ar4ErgScMH9aJF2qmyNzHW2KLe8I7xhqQgJcjmLxs1Uh1rJIn5Llgj0vJ6ErhNj+MCa4qQv4wAO6g+kDFTDwTfpXw7eMNW9Ya3C/YGK4TsBa7VuP8/Cd4XoNAeVpZeT1W7j83zQUWBsAe4J2gART4jZLlhm3rDZv17tCC9IYCwleotvdiO6wvU6yPgCHAncCvws35XBC8Eaf9R4AcFpHDx03LDdq0w31NPKKoEPkH1GUWX9+5wt9QZgLM0iyxy3N1aDe7wPVRmQnp7tAfjbwrjuz54ZcYVrDkG9/8ROOD7SKIqcvuJZqqnDOIbIyH/2AX8OcgAfAt8N8jvDM0AXw4qAEGv2OcG/MXJUTd8c5The4NDAIYADAEY3PYvEhBSVQeQ62YAAAAASUVORK5CYII=", "r": "data:image/png;base64,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", "p": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAEQklEQVR42t3bSYgcdRQG8F8vEkVQkSAEBC+KHhRcgzEuIQcRVIJxxe2gEFwOEXcRUcRDUEQvRgQFUVyCS0SJ4kFQzChxgxwGUSQejAdFEUTEYHeXh36Nz7ITncx0d1X9oaiemu6Zeu//1fe+t3SrKApjVhsDXIoz8RWeQh/dOI/9YO1WURTloxPndcU/11xRFKvHvK/WR3uMT1pxvjbOe2LHz8B2PI7D41on0FLbta+bH8S5E8cgYL8RX+CycMIgHovGOWDce1vo4Shswas4Oq616oiG/bnhbux6HxfjM9wS6BgEWlpNdsDoc51wwqF4DO9jVYoQnSY7QOKHIh6Bc4IkH8EhiSRbTXbAKGqMtEELt+MTXJDQ0G2yAzIaRiR5LN7C81gR19pVJMlJ3NCIJAe4Gp9jQ7rWrdJj0Z7g323HI7AiZPS7OD7QUBmSnDQkRyTZx7nBDQ/gwKqQ5DSeyVYKmQfhfnyMtVUImdMkpRwyT8R72JzyipmQ5LT/YSuRZIEbI6+4vESSjXXA3vKKl/H6LPKKWcflnFdchE9xayrITDxkVkGY5LziMDyKD7FyGiGzSsosk+QqzOHhUl7RbrIDynlFF3dEur1uUsWXqhYwRpDv4Ri8gReCMJeUJKtewcl5xZWBhhtS8WXRJFmHElbOK5bjyRBRJy0FSdaphpfzirXYgYcWm1fUrYiZ84oDcG8kWOftb15R15p+Dpkn4B08gyMWmlfUuanRKpHkdVF8uWYhxZdad3VKJNnDkXgOb+K4RJKtJjsgh8wRSV4YIfM+LNuXE5rkgDJJHowHDfsVy0t9z8Y6oEySe3C6YR9zbIRoqgMaHwb/a42aNMtCJ2yJn/tNd0CRVOHvQYJn4+f0+38xZ1NWL+zpYBvuwnwiv6Kpj0AWPbtxvWFfcj4JoWJfsbMJuw7P4m78kDa293/EQ11Jrh33/6Vh5WhbsqmnoVEgk9wAm3BaGJ+70wuSj3Xa9dHA1gdBcjuS8Ok3VQcM0uzRL4ZTamvC+O7e4ntTEJBJ7jXciV1h9ILhXicEDNJoza7Q8pfE624qijZOChdpnIbhVOopeKWU9y9pDl01kuv6u0e4fbEkVwcElPX7PVgdxncWS3JVR0DW728Hyc1PetergICs3783nCY7v6Tf+xpYDyhKM4NP41TDvl8muWKahcRZkNw8bjMcnZsa3GflgDxF/ofhAMQm/JY0fd8MS8nT1O8bsXPWuz4NDhgk43/ETaHfd06b5GaBgKzftxhOj+9eSv1eVQRk/f411uOKMH5J9XvVHDBOv6/E1tI8oKr205YqtH0USm6uSiQ3KQRk/f5rGH5WGN+pEslNAgFZv28N478pNSY1sTWWSe47w6mt9WF8bk1rigPayah+IrTNOBkvpenNHs1pjo4SkRdTg7FjWIRcg5vxU4L7QI1Xay9fnx+1k66KkPYtnsCfTfv6/F/XEfLhyF+NEQAAAABJRU5ErkJggg==", "z": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAADpklEQVR42u2bu6sTQRTGf7tJru8nghYWCoogoiha+EBBBCux0cbWP0BBGwuxsfE/UBuxEhvBRrCwElQQRK1EEQu5+Ebv9V6v3jw+i5zBIWazu8nmJpfMgWGTMHPm22++OTM72RNJIoOVgZp9XgeUAAGR/TZu1xJQp7/m97EMWO5haQAfcmGRlFYiu26SdE3ShKRfXpmWdFfSPqtXyuCz2+J875Z0XdJrSTOGYUbSpKRbkg5avTjNZ1qHZbuekTSlzlaXdKmlXZHF+TxrxKfZFa9d1A0Bju1zntOqpEZLcb/X7fOFPijBjeRpD8tsGyyNFiwX07BECTEgtvm0BXgOVGyOxR1mU8PmYh3YA7wsKCY4LJuBF8BYBiwORxnYCzxJwpLkxAW388BCcxhnACoDeNl8qICgF1m5ACzKiCXy7uGyDWBbLO0U4IAvBt4Dq1pIIYX5CPgKrAf+9EiEa1uxlWZNF1imgbV2/Q9LJyaXeHLLC3iFTQMyjFaaP4DVXWBx03IBcCAJS5wgZYCNpoK8VrMR25ljtNII2GakKoe/yIsDu/IQgMd6nLNT34rcEFV6bF/tFLiS7HeLrLsdvSKs2jK3C8MSM+IWz9EI9moaBAG1ISJgbC4JUFrgGCABKlqZ82UKNPqFab4EwYHEgGGyaNQJIBAQCBhtAkIQDAT0SQnxPCGnMZcKiAp6Bi/SZnp8NA8xICyDXRCgsA8IBAQCwplgUEAgICyDI7cRcjc+O0QELBrEqXA4DxiFZ4KggPA0GJbBQECIASEGzB/TqBIQM4BT4TFG/FR4mM4D6iEIhiAYjsWDAoIC5piA8hBtWuJBEDBJb2+LlgvEOWFYoqL/Xo87VH7DvzfG8974LM38nl6V4LC8Aqa6UGDFsDxI2k/EKbuvj+ZIOWX/G3hc0MsNkWH5lhOLwzNtBLYdjKRT4ZIxd8PLvMi6Y4uAOybZUo8KkCmqClw137WcWG7QzF1qiyUpbc5lXS0xKW80EJWUDkvAJ2A78IV/6axF7AJXAM8yYqkZceM0020m8ijAr/gTOAl8tw7r5lxeqXujPWX1Pxd08/5/AT+A4zQz0nwsDQ9Lzbv5KeCUtYsTlZgxV3eHpGcpqarvJO3vY/6w87lV0tMULG+9/OGOWKIM2eMu47ICnACOAIdpZpFXgXvAI+CmSa2fGeQui7QMHAOOAoeADbZs3wceArfteyqWKGP6fNwi55UWH/x09Xb1+kmCs6UWH2Yt7uTC8hfIORcqXQT0FwAAAABJRU5ErkJggg=="};
+$('#rpIcL').src = IC.l; $('#rpIcR').src = IC.r; $('#rpIcP').src = IC.p;
 const R = { on: false, rec: null, i: 0, timer: 0, bak: null };
 let rdb = null;
 const rOpen = () => rdb || (rdb = new Promise((res, rej) => { const q = indexedDB.open('ygo-solo-replays', 1); q.onupgradeneeded = () => q.result.createObjectStore('r', { keyPath: 'id' }); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }));
@@ -2330,12 +2334,14 @@ const rPut = rec => rTx('readwrite', st => st.put(rec));
 const rDel = id => rTx('readwrite', st => st.delete(id));
 const KEEP = 30;
 async function prune() { const un = (await rAll()).filter(r => !r.pin).sort((a, b) => b.at - a.at); for (const r of un.slice(KEEP)) await rDel(r.id); }
-function askSave(n) {
+function askSave(n, name) {
   return new Promise(res => {
     const el = $('#soloAsk');
-    $('#soloAskBox').innerHTML = `<h4>Save a replay?</h4><div class="ask"><p>Keep this game (${n} step${n === 1 ? '' : 's'}) in Replays so you can watch the combo later.</p><div class="rb"><button class="primary" data-a="1">Yes</button><button data-a="0">No</button></div></div>`;
-    const h = e => { const b = e.target.closest('[data-a]'); if (!b) return; el.classList.remove('on'); el.removeEventListener('click', h); res(b.dataset.a === '1'); };
-    el.addEventListener('click', h); el.classList.add('on');
+    $('#soloAskBox').innerHTML = `<h4>Save a replay?</h4><div class="ask"><p>Keep this game (${n} step${n === 1 ? '' : 's'}) in Replays so you can watch the combo later. You can rename it first.</p><input id="rpName" type="text" maxlength="80" aria-label="Replay name" value="${esc(name)}"><div class="rb"><button class="primary" data-a="1">Yes</button><button data-a="0">No</button></div></div>`;
+    const fin = v => { el.classList.remove('on'); el.removeEventListener('click', h); el.removeEventListener('keydown', k); res(v); };
+    const h = e => { const b = e.target.closest('[data-a]'); if (b) fin(b.dataset.a === '1' ? $('#rpName').value.trim() || name : null); };
+    const k = e => { if (e.key === 'Enter' && e.target.id === 'rpName') { e.preventDefault(); fin($('#rpName').value.trim() || name); } };
+    el.addEventListener('click', h); el.addEventListener('keydown', k); el.classList.add('on');
   });
 }
 async function saveReplay() {
@@ -2344,11 +2350,12 @@ async function saveReplay() {
     const cards = {}; for (const u in S.C) { const c = S.C[u].c; cards[u] = c.type === 'Token' ? { ...c, img: '' } : c; }
     const when = new Date().toLocaleString([], { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
     const rec = { id: Date.now(), at: Date.now(), pin: false, name: (state.name || 'Untitled') + ' · ' + when, steps: S.hist.slice(0, S.idx + 1).map(h => ({ t: h.t, s: h.s })), cards };
-    if (!(await askSave(rec.steps.length - 1))) return;
+    const nm = await askSave(rec.steps.length - 1, rec.name); if (nm === null) return; rec.name = nm;
     rPut(rec).then(prune).then(() => toast('Replay saved.')).catch(() => { });
   } catch (e) { }
 }
-function rpStop() { clearInterval(R.timer); R.timer = 0; const b = $('#rpPlay'); if (b) b.textContent = '▶ Play'; }
+const rpIcon = playing => { $('#rpIcP').src = playing ? IC.z : IC.p; $('#rpPlay').setAttribute('aria-label', playing ? 'Pause' : 'Play'); };
+function rpStop() { clearInterval(R.timer); R.timer = 0; rpIcon(false); }
 function rpGo(i) {
   const st = R.rec.steps; R.i = Math.max(0, Math.min(st.length - 1, i));
   const o = JSON.parse(st[R.i].s); S.Z = o.Z; S.P = o.P; S.M = o.M || {};
@@ -2359,7 +2366,7 @@ function rpGo(i) {
 function rpPlay() {
   if (R.timer) { rpStop(); return; }
   if (R.i >= R.rec.steps.length - 1) rpGo(0);
-  $('#rpPlay').textContent = '⏸ Pause'; R.timer = setInterval(() => rpGo(R.i + 1), 1100);
+  rpIcon(true); R.timer = setInterval(() => rpGo(R.i + 1), 1100);
 }
 async function openReplay(id) {
   let rec; try { rec = (await rAll()).find(r => r.id === id); } catch (e) { }
