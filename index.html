@@ -613,7 +613,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
       </section>
     </div>
   </div>
-  <div id="buildTag">Tool Version 19/11/2026 17:30</div>
+  <div id="buildTag">Tool Version 19/11/2026 17:40</div>
 </main>
 
 <main class="pane" id="pane-sim">
@@ -784,7 +784,7 @@ async function refreshBan() {            // every time a deck is opened: fetch t
   if (got) render(true);
 }
 
-const fmtDesc = d => String(d || '').replace(/\.[ ](?=[A-Z])/g, '.\n');   // card text arrives as one block: start a new line after a full stop when a capital letter follows
+const fmtDesc = d => String(d || '').replace(/\.[ ](?=[A-Z])/g, '.\n\n');   // card text arrives as one block: start a new line after a full stop when a capital letter follows
 function normalize(c) {
   const m = (c.misc_info && c.misc_info[0]) || c;
   return {
