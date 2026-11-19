@@ -613,7 +613,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
       </section>
     </div>
   </div>
-  <div id="buildTag">Tool Version 19/11/2026 16:50</div>
+  <div id="buildTag">Tool Version 19/11/2026 17:30</div>
 </main>
 
 <main class="pane" id="pane-sim">
@@ -784,6 +784,7 @@ async function refreshBan() {            // every time a deck is opened: fetch t
   if (got) render(true);
 }
 
+const fmtDesc = d => String(d || '').replace(/\.[ ](?=[A-Z])/g, '.\n');   // card text arrives as one block: start a new line after a full stop when a capital letter follows
 function normalize(c) {
   const m = (c.misc_info && c.misc_info[0]) || c;
   return {
@@ -1187,7 +1188,7 @@ function openInfo(c, withImg) {                   // fixed-size card window: clo
   box.innerHTML = `<button id="modalX" type="button" aria-label="Close">✕</button>
     <div class="mtop">${withImg ? `<img class="mimg" data-cid="${c.id}" data-url="${esc(c.img)}" alt="">` : ''}
     <div class="mhd"><h3 class="mt">${esc(c.name)}</h3><div class="stats">${esc(c.type)} — ${esc(cardStats(c))}</div></div></div>
-    <div class="desc">${esc(c.desc)}</div>`;
+    <div class="desc">${esc(fmtDesc(c.desc))}</div>`;
   const ae = document.activeElement; if (ae && ae.id === 'search') ae.blur();   // keep the on-screen keyboard from covering the window
   $('#modal').style.display = 'flex';
   box.querySelector('.desc').scrollTop = 0;
@@ -1205,7 +1206,7 @@ function hideTip() { clearTimeout(tipT); tipT = null; tipRow = null; const t = $
 function showTip(row) {
   const c = lastResults[+row.dataset.i]; if (!c) return;
   const tip = $('#tip');
-  tip.innerHTML = `<div class="tn">${esc(c.name)}</div><div class="ts">${esc(c.type)} — ${esc(cardStats(c))}</div><div class="td">${esc(c.desc)}</div>`;
+  tip.innerHTML = `<div class="tn">${esc(c.name)}</div><div class="ts">${esc(c.type)} — ${esc(cardStats(c))}</div><div class="td">${esc(fmtDesc(c.desc))}</div>`;
   tip.style.visibility = 'hidden'; tip.style.display = 'block';
   const r = row.getBoundingClientRect(), b = $('#results').getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight, M = 8;
   let left, top;
