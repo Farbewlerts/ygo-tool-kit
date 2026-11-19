@@ -613,7 +613,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
       </section>
     </div>
   </div>
-  <div id="buildTag">Tool Version 19/11/2026 16:35</div>
+  <div id="buildTag">Tool Version 19/11/2026 16:50</div>
 </main>
 
 <main class="pane" id="pane-sim">
@@ -860,8 +860,12 @@ function getImgSrc(id, url) {
 function fillImgs(root) {
   root.querySelectorAll('img[data-cid]').forEach(img => {
     if (img.dataset.ok) return;                 // already showing its picture (reused element)
-    const id = +img.dataset.cid;
-    img.onerror = () => { if (img.dataset.url && img.src !== img.dataset.url) { img.onerror = null; img.src = img.dataset.url; } };
+    const id = +img.dataset.cid, url = img.dataset.url;
+    let tries = 0;                              // a picture that fails to load (server busy, flaky network) is retried a few times instead of staying broken
+    img.onerror = () => { if (!url || tries >= 3) return; tries++; setTimeout(() => { if (img.isConnected) img.src = url + '#' + tries; }, 600 * tries); };
+    if (img.closest('#results')) {              // search results: load the picture directly, only when it scrolls near the screen (up to 120 results would otherwise all hit the server at once)
+      img.loading = 'lazy'; img.src = memURL.get(id) || url; return;
+    }
     if (memURL.has(id)) { img.src = memURL.get(id); img.dataset.ok = '1'; return; }
     getImgSrc(id, img.dataset.url).then(src => { img.src = src; img.dataset.ok = '1'; });
   });
