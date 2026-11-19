@@ -613,7 +613,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
       </section>
     </div>
   </div>
-  <div id="buildTag">Tool Version 19/11/2026 18:15</div>
+  <div id="buildTag">Tool Version 19/11/2026 21:35</div>
 </main>
 
 <main class="pane" id="pane-sim">
@@ -786,7 +786,10 @@ async function refreshBan() {            // every time a deck is opened: fetch t
 
 const fmtDesc = (d, type) => {                  // card text arrives as one block: add line breaks to make it easier to read
   let t = String(d || '').replace(/\r\n?/g, '\n').replace(/([^\n])[ ]*●/g, '$1\n●');   // every ● bullet starts its own line (no blank line)
-  t = t.replace(/\.\)?[ ](?=[A-Z])/g, m => m.trim() + '\n\n');                      // blank line after a full stop (or ".)") followed by a capital letter
+  t = t.replace(/\.\)?[ ](?=[A-Z])/g, m => m.trim() + '\n\n');
+  t = t.replace(/\.\)\n(?=[A-Z])/g, '.)\n\n');                                         // ".)" already followed by a line break from the API: blank line too                      // blank line after a full stop (or ".)") followed by a capital letter
+  t = t.replace(/\.\)\n(?!\n)/g, '.)\n\n');                                         // ".)" ending a line: blank line too, even where the card text already breaks the line
+  t = t.replace(/(^|\n)(●[^\n]*)\n(?=[^●\n])/g, '$1$2\n\n');                          // the line after the last ● bullet starts a new paragraph
   if (/Fusion|Synchro|XYZ|Link/i.test(type || '')) {                                  // Extra Deck: blank line after the summoning-materials block
     const h = /\[ Monster Effect \]\s*\n/.exec(t), from = h ? h.index + h[0].length : 0;
     let k = t.indexOf('\n', from);
