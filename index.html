@@ -108,7 +108,7 @@ button:disabled{opacity:.35;cursor:not-allowed}
 #results .more{padding:8px;text-align:center}
 .srow{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-top:8px}
 .sleft{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
-#fFormat{padding:6px 10px;font-size:14px;border-radius:7px}
+#fFormat,#fScope{padding:6px 10px;font-size:14px;border-radius:7px}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
 .seg button{border:none;border-radius:0;background:#08203a;padding:6px 18px}
 .seg button.on{background:var(--accent);font-weight:600}
@@ -264,6 +264,7 @@ body.searching .sleft{display:contents}
 body.searching #fFormat{grid-column:1;grid-row:1;min-width:0;width:100%}
 body.searching .seg{grid-column:2;grid-row:1}
 body.searching #btnFilter{grid-column:1;grid-row:2}
+body.searching #fScope{grid-column:1 / -1;grid-row:3;min-width:0;width:100%}
 body.searching #btnFilterClear{grid-column:2;grid-row:2}
 body.searching .searchwrap #results,body.searching .searchwrap .fpanel{margin-top:6px}
 #toast,#tmBar{bottom:calc(24px + env(safe-area-inset-bottom))}
@@ -305,7 +306,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
   .tagbar .clrw{width:100%;flex:1 1 100%}
   .tagbar button{flex:1}
   .sleft{width:100%}
-  #fFormat{flex:1 1 100%;padding:9px 10px;font-size:16px}
+  #fFormat,#fScope{flex:1 1 100%;padding:9px 10px;font-size:16px}
   .sleft button{flex:1}
   .seg{width:100%}
   .seg button{flex:1;padding:9px}
@@ -580,6 +581,9 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
               <select id="fFormat" title="Banlist format for this deck">
                 <option value="tcg">Format: TCG</option><option value="ocg">Format: OCG</option><option value="md">Format: Master Duel</option><option value="none">Format: No Limit</option>
               </select>
+              <select id="fScope" title="Where to look for the text you type">
+                <option value="name">Search: Name</option><option value="text">Search: Name + Effect</option>
+              </select>
               <button id="btnFilter">Filter ▾</button>
               <button id="btnFilterClear" disabled>Clear Filters</button>
             </div>
@@ -613,7 +617,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
       </section>
     </div>
   </div>
-  <div id="buildTag">Tool Version 13/11/2026 21:20</div>
+  <div id="buildTag">Tool Version 19/11/2026 17:00</div>
 </main>
 
 <main class="pane" id="pane-sim">
@@ -1369,6 +1373,50 @@ function refreshResultBtns() {
     row.classList.toggle('full', have >= banLimit(c));
   });
 }
+/* ---------- search inside effect text: one-time download of every card's text, then filtered on this device ---------- */
+const TXT_KEY = 'textidx', TXT_AGE = 7 * 864e5, TXT_CAP = 120;
+let txtIdx = null, txtLoading = null, resultNote = '';
+function loadTextIdx() {
+  if (txtIdx) return Promise.resolve(txtIdx);
+  if (txtLoading) return txtLoading;
+  txtLoading = (async () => {
+    const rec = await idbGet('meta', TXT_KEY);
+    if (rec && rec.rows && Date.now() - rec.at < TXT_AGE) return (txtIdx = rec.rows);
+    let rows;
+    try {
+      const j = await (await fetch(API)).json();
+      rows = (j.data || []).filter(c => c.type !== 'Skill Card' && c.type !== 'Token' && c.name !== '???').map(c => ({
+        id: c.id, name: c.name, n: c.name.toLowerCase(), d: (c.desc || '').toLowerCase().replace(/\s+/g, ' '),
+        type: c.type, race: c.race, attribute: c.attribute || '', level: c.level || c.linkval || 0 }));
+      if (!rows.length) throw new Error('empty');
+    } catch (e) { if (rec && rec.rows) return (txtIdx = rec.rows); throw e; }
+    try { await idbSet('meta', TXT_KEY, { at: Date.now(), rows }); } catch {}
+    return (txtIdx = rows);
+  })().finally(() => { txtLoading = null; });
+  return txtLoading;
+}
+function textSearch(q, sig, box) {
+  const ql = q.toLowerCase().replace(/\s+/g, ' ');
+  if (!txtIdx) box.innerHTML = '<div class="msg">Loading card text (first time only, this can take a moment)...</div>';
+  loadTextIdx().then(rows => {
+    if (sig.aborted) return;
+    const hit = rows.filter(r => (r.n.includes(ql) || r.d.includes(ql)) && matchFilters(r));
+    hit.sort((a, b) => (b.n.startsWith(ql) - a.n.startsWith(ql)) || (b.n.includes(ql) - a.n.includes(ql)) || a.name.localeCompare(b.name));
+    const ids = hit.slice(0, TXT_CAP).map(r => r.id), chunks = [];
+    for (let i = 0; i < ids.length; i += 40) chunks.push(ids.slice(i, i + 40));
+    resultNote = hit.length > TXT_CAP ? `Showing the first ${TXT_CAP} of ${hit.length} matches. Type more of the text to narrow it down.` : '';
+    return Promise.all(chunks.map(ch => {
+      const url = API + '?misc=yes&id=' + ch.join(',');
+      if (searchCache.has(url)) return searchCache.get(url);
+      return fetch(url, { signal: sig }).then(r => r.json()).then(j => { const d = j.data || []; searchCache.set(url, d); return d; });
+    })).then(arrs => {
+      if (sig.aborted) return;
+      const by = new Map(arrs.flat().map(c => [c.id, c]));
+      lastResults = ids.map(id => by.get(id)).filter(Boolean).map(normalize);
+      renderResults();
+    });
+  }).catch(err => { if (err.name !== 'AbortError') box.innerHTML = '<div class="msg">Could not load the card text. Check your internet connection.</div>'; });
+}
 function renderResults() {
   const box = $('#results'), st = box.scrollTop;
   hideTip();
@@ -1376,7 +1424,7 @@ function renderResults() {
   const more = lastResults.length > shown;
   box.innerHTML = '<div class="rgrid">' + lastResults.slice(0, shown).map((c, i) => `<div class="ri rc" data-i="${i}" title="${esc(c.name)}">
     <img data-cid="${c.id}" data-url="${esc(c.img)}" alt="${esc(c.name)}"><span class="badge" hidden></span>${banLimit(c) < 3 ? `<span class="gban b${banLimit(c)}" title="${BAN_NAME[banLimit(c)]}">${banLimit(c)}</span>` : ''}
-  </div>`).join('') + '</div>' + (more ? '<div class="more"><button id="btnMore">Load More</button></div>' : '');
+  </div>`).join('') + '</div>' + (more ? '<div class="more"><button id="btnMore">Load More</button></div>' : '') + (resultNote && !more ? `<div class="msg">${esc(resultNote)}</div>` : '');
   fillImgs(box);
   box.scrollTop = st;
   updateResultsVis();
@@ -1391,6 +1439,8 @@ function doSearch(append) {
   box.innerHTML = '<div class="msg">Searching...</div>'; updateResultsVis(); shown = PAGE;
   searchCtl = new AbortController();
   const sig = searchCtl.signal;
+  resultNote = '';
+  if ($('#fScope').value === 'text' && q) { textSearch(q, sig, box); return; }
   // Level/Rank and Link values are separate API parameters: one request per selected value, merged afterwards
   const reqs = [...[...filters.lvl].map(n => ['level', n]), ...[...filters.link].map(n => ['linkval', n])];
   if (!reqs.length) reqs.push(null);
@@ -1506,6 +1556,7 @@ document.addEventListener('click', ev => {
   if (g) { const e = state.entries.find(x => x.key === g.dataset.key); if (e) showDetail(e); return; }
 });
 document.addEventListener('change', ev => {
+  if (ev.target.id === 'fScope') { doSearch(false); return; }
   if (ev.target.id === 'fFormat') {
     state.format = ev.target.value;
     if (state.format === 'md' && !mdBan) loadMdBan();
@@ -2087,14 +2138,14 @@ document.addEventListener('click', ev => {
 });
 
 if (TOUCH) {                                    // bottom selection sheet replaces native <select> pickers
-  const SEL = '#deckSelect, #fFormat, select[data-f="op"], select[data-f="tag"]';
+  const SEL = '#deckSelect, #fFormat, #fScope, select[data-f="op"], select[data-f="tag"]';
   const sheet = document.getElementById('selSheet'), box = document.getElementById('selBox');
   let cur = null;
   const closeSheet = () => { sheet.classList.remove('open'); cur = null; };
   const openSheet = (sel) => {
     if (sel.disabled) return;
     cur = sel; box.innerHTML = '';
-    const lab = sel.getAttribute('aria-label') || sel.title || (sel.id === 'deckSelect' ? 'Saved Decks' : sel.id === 'fFormat' ? 'Format' : sel.dataset.f === 'op' ? 'Comparison' : 'Tag');
+    const lab = sel.getAttribute('aria-label') || sel.title || (sel.id === 'deckSelect' ? 'Saved Decks' : sel.id === 'fFormat' ? 'Format' : sel.id === 'fScope' ? 'Search In' : sel.dataset.f === 'op' ? 'Comparison' : 'Tag');
     const t = document.createElement('div'); t.className = 'sttl'; t.textContent = lab; box.appendChild(t);
     Array.from(sel.options).forEach((o, i) => {
       const b = document.createElement('button'); b.type = 'button'; b.dataset.i = i;
