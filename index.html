@@ -355,6 +355,10 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
 .sz.has .zl{display:none}
 .sz .zc{display:contents}
 .sz .gem{position:absolute;left:50%;top:50%;width:70%;transform:translate(-50%,-50%);pointer-events:none}
+.dragghost{position:fixed;left:0;top:0;z-index:70;pointer-events:none;touch-action:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.55))}
+.dragghost .cd{position:absolute;left:0;top:0;width:100%;height:100%}
+#soloBoard .sz{touch-action:none}
+.sz.dh{box-shadow:inset 0 0 0 3px #fff}
 .sz.hl2{border-color:#6fb0ee;animation:szhl2 var(--hz) ease-in-out infinite;cursor:pointer}
 @keyframes szhl2{0%,100%{box-shadow:0 0 0 0 rgba(111,176,238,0);background:rgba(111,176,238,0)}50%{box-shadow:0 0 14px 3px rgba(111,176,238,.9);background:rgba(111,176,238,.18)}}
 .sz.hl{border-color:#ffd66b;animation:szhl var(--hz) ease-in-out infinite;cursor:pointer}
@@ -370,7 +374,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
 .sz.ban .cnt{right:auto;left:50%}
 #soloHandBox{overflow-x:auto;padding-bottom:4px}
 .hand{display:flex;gap:6px;width:max-content;margin:0 auto;padding:12px 10px;min-height:calc(var(--hw)*1.46 + 24px)}
-.hc{position:relative;flex:none;width:var(--hw);height:calc(var(--hw)*1.46)}
+.hc{touch-action:pan-x;position:relative;flex:none;width:var(--hw);height:calc(var(--hw)*1.46)}
 .hc .cd{--tr:translate(0,0);position:absolute;left:0;top:0;width:100%;height:100%}
 .sov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);align-items:center;justify-content:center;z-index:44;padding:calc(88px + env(safe-area-inset-top,0px)) 16px calc(68px + env(safe-area-inset-bottom,0px))}
 .sov.on{display:flex}
@@ -614,7 +618,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
       </section>
     </div>
   </div>
-  <div id="buildTag">Tool Version 25/11/2026 21:30</div>
+  <div id="buildTag">Tool Version 26/11/2026 17:20</div>
 </main>
 
 <main class="pane" id="pane-sim">
@@ -2664,6 +2668,52 @@ pane.addEventListener('click', async e => {
   else if (S.Z[zz][i]) openCard(S.Z[zz][i]);
 });
 document.addEventListener('click', e => { if (e.target.closest('[data-tab="solo"]')) setTimeout(show, 0); });
+/* ----- drag & drop: a card from the hand or the board is dragged onto a highlighted zone. A plain tap still works as before. ----- */
+let DR = null, noClickUntil = 0;
+pane.addEventListener('click', e => { if (performance.now() < noClickUntil && !e.target.closest('.sov')) { e.stopPropagation(); e.preventDefault(); } }, true);   // the tap that ends a drag must not open a card menu
+pane.addEventListener('pointerdown', e => {
+  if (e.button > 0 || DR || R.on || !S.started || S.pl || S.loading || e.target.closest('.sov')) return;
+  const h = e.target.closest('.hc'), z = e.target.closest('.sz'); let u = null;
+  if (h) u = h.dataset.u; else if (z && BOARD.includes(z.dataset.z)) u = S.Z[z.dataset.z][+z.dataset.i];
+  if (!u) return;
+  DR = { u, hand: !!h, id: e.pointerId, x0: e.clientX, y0: e.clientY, go: false, touch: e.pointerType !== 'mouse', src: h || z.querySelector('.cd') };
+  window.addEventListener('pointermove', drMove); window.addEventListener('pointerup', drUp); window.addEventListener('pointercancel', drUp);
+});
+function drTarget(x, y) { const el = document.elementFromPoint(x, y), z = el && el.closest('.sz'); return z && pane.contains(z) ? z : null; }
+function drMove(e) {
+  if (!DR || e.pointerId !== DR.id) return;
+  const dx = e.clientX - DR.x0, dy = e.clientY - DR.y0;
+  if (!DR.go) {
+    if (Math.hypot(dx, dy) < 8) return;
+    if (DR.touch && DR.hand && Math.abs(dx) > Math.abs(dy)) { drEnd(); return; }              // a sideways swipe on the hand scrolls the hand, it is not a drag
+    const kind = DR.hand ? 'place' : 'move', v = validZones(DR.u, kind);
+    if (!v.length) { drEnd(); return; }
+    const cell = ZD.find(d => d.z === 'mmz').el.getBoundingClientRect(), g = document.createElement('div');
+    g.className = 'dragghost'; g.style.width = cell.width + 'px'; g.style.height = cell.height + 'px';
+    g.innerHTML = cardEl(DR.u).replace('cd rot', 'cd'); document.body.appendChild(g);
+    DR.g = g; DR.w = cell.width; DR.h = cell.height; DR.go = true;
+    S.pl = { u: DR.u, kind, v: new Set(v), drag: true }; draw(); $('#soloHint').classList.remove('on');   // no hint bar: it would shift the layout under the finger
+    if (DR.src) DR.src.style.opacity = '.35';
+  }
+  e.preventDefault();
+  const cx = e.clientX, cy = e.clientY - DR.h * 0.8;                                         // the card is held above the finger so the finger does not cover it
+  DR.g.style.transform = `translate3d(${cx - DR.w / 2}px,${cy - DR.h / 2}px,0)`;
+  const z = drTarget(cx, cy), ok = z && S.pl && S.pl.v.has(z.dataset.z + ':' + z.dataset.i) ? z : null;
+  if (DR.over !== ok) { if (DR.over) DR.over.classList.remove('dh'); if (ok) ok.classList.add('dh'); DR.over = ok; }
+}
+function drEnd() {
+  window.removeEventListener('pointermove', drMove); window.removeEventListener('pointerup', drUp); window.removeEventListener('pointercancel', drUp);
+  if (DR) { if (DR.g) DR.g.remove(); if (DR.over) DR.over.classList.remove('dh'); if (DR.src) DR.src.style.opacity = ''; }
+  DR = null;
+}
+function drUp(e) {
+  if (!DR || e.pointerId !== DR.id) return;
+  const was = DR, over = was.over, cancelled = e.type === 'pointercancel';
+  drEnd();
+  if (!was.go) return;                                                                       // never became a drag: the normal tap handler takes over
+  noClickUntil = performance.now() + 400;
+  if (over && !cancelled && S.pl) finishPlace(over.dataset.z, +over.dataset.i); else cancelPlace();
+}
 buildBoard(); draw(); setNote();
 })();
 </script>
