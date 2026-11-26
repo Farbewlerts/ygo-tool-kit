@@ -618,7 +618,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
       </section>
     </div>
   </div>
-  <div id="buildTag">Tool Version 26/11/2026 17:40</div>
+  <div id="buildTag">Tool Version 26/11/2026 17:50</div>
 </main>
 
 <main class="pane" id="pane-sim">
@@ -2706,7 +2706,7 @@ function drMove(e) {
     if (DR.src) DR.src.style.opacity = '.35';
   }
   e.preventDefault();
-  const cx = e.clientX, cy = e.clientY - (DR.touch ? DR.h * 0.6 : 0);                       // touch: the card is held a little above the finger; mouse: the pointer stays in the middle of the card
+  const cx = e.clientX, cy = e.clientY - (DR.touch ? DR.h * 0.7 : 0);                       // touch: the card is held a little above the finger; mouse: the pointer stays in the middle of the card
   DR.g.style.transform = `translate3d(${cx - DR.w / 2}px,${cy - DR.h / 2}px,0)`;
   const ok = drSnap(cx, cy);
   if (DR.over !== ok) { if (DR.over) DR.over.classList.remove('dh'); if (ok) ok.classList.add('dh'); DR.over = ok; }
