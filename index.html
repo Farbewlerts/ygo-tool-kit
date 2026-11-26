@@ -356,7 +356,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
 .sz .zc{display:contents}
 .sz .gem{position:absolute;left:50%;top:50%;width:70%;transform:translate(-50%,-50%);pointer-events:none}
 .dragghost{position:fixed;left:0;top:0;z-index:70;pointer-events:none;touch-action:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.55))}
-.dragghost .cd{position:absolute;left:0;top:0;width:100%;height:100%}
+.dragghost .cd{--tr:translate(0,0);position:absolute;left:0;top:0;width:100%;height:100%}
 #soloBoard .sz{touch-action:none}
 .sz.dh{box-shadow:inset 0 0 0 3px #fff}
 .sz.hl2{border-color:#6fb0ee;animation:szhl2 var(--hz) ease-in-out infinite;cursor:pointer}
@@ -618,7 +618,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
       </section>
     </div>
   </div>
-  <div id="buildTag">Tool Version 26/11/2026 17:20</div>
+  <div id="buildTag">Tool Version 26/11/2026 17:40</div>
 </main>
 
 <main class="pane" id="pane-sim">
@@ -2679,7 +2679,17 @@ pane.addEventListener('pointerdown', e => {
   DR = { u, hand: !!h, id: e.pointerId, x0: e.clientX, y0: e.clientY, go: false, touch: e.pointerType !== 'mouse', src: h || z.querySelector('.cd') };
   window.addEventListener('pointermove', drMove); window.addEventListener('pointerup', drUp); window.addEventListener('pointercancel', drUp);
 });
-function drTarget(x, y) { const el = document.elementFromPoint(x, y), z = el && el.closest('.sz'); return z && pane.contains(z) ? z : null; }
+function drSnap(x, y) {                                                                      // the highlighted zone under the card centre, or the nearest one within a small margin around it
+  const m = DR.w * 0.35; let best = null, bd = 1e9, bc = 1e9;
+  ZD.forEach(d => {
+    if (!S.pl || !S.pl.v.has(d.z + ':' + d.i)) return;
+    const r = d.el.getBoundingClientRect(), dx = Math.max(r.left - x, 0, x - r.right), dy = Math.max(r.top - y, 0, y - r.bottom), ed = Math.hypot(dx, dy);
+    if (ed > m) return;
+    const cd = Math.hypot(x - (r.left + r.right) / 2, y - (r.top + r.bottom) / 2);
+    if (ed < bd - 0.5 || (Math.abs(ed - bd) <= 0.5 && cd < bc)) { best = d.el; bd = ed; bc = cd; }
+  });
+  return best;
+}
 function drMove(e) {
   if (!DR || e.pointerId !== DR.id) return;
   const dx = e.clientX - DR.x0, dy = e.clientY - DR.y0;
@@ -2696,9 +2706,9 @@ function drMove(e) {
     if (DR.src) DR.src.style.opacity = '.35';
   }
   e.preventDefault();
-  const cx = e.clientX, cy = e.clientY - DR.h * 0.8;                                         // the card is held above the finger so the finger does not cover it
+  const cx = e.clientX, cy = e.clientY - (DR.touch ? DR.h * 0.6 : 0);                       // touch: the card is held a little above the finger; mouse: the pointer stays in the middle of the card
   DR.g.style.transform = `translate3d(${cx - DR.w / 2}px,${cy - DR.h / 2}px,0)`;
-  const z = drTarget(cx, cy), ok = z && S.pl && S.pl.v.has(z.dataset.z + ':' + z.dataset.i) ? z : null;
+  const ok = drSnap(cx, cy);
   if (DR.over !== ok) { if (DR.over) DR.over.classList.remove('dh'); if (ok) ok.classList.add('dh'); DR.over = ok; }
 }
 function drEnd() {
