@@ -384,6 +384,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
 .mh .bk{width:44px;height:64px;border-radius:3px;border:2px solid #c99a55;background:repeating-linear-gradient(135deg,#5a3418 0 8px,#3b2210 8px 16px);box-sizing:border-box}
 .smenu .mi{all:unset;box-sizing:border-box;display:block;width:calc(100% - 20px);margin:5px 10px 0;padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);font-size:15px;text-align:center;cursor:pointer;color:var(--text)}
 .smenu .mi:active{background:#2a3f57}
+.smenu .mg{margin:12px 14px 0;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 @media(hover:hover){.smenu .mi:hover{background:#2a3f57}}
 .slist{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(400px,100%);max-height:78vh;max-height:78dvh;overflow:auto;overscroll-behavior:contain;padding:0 14px 12px}
 .slist h4,.slog h4{padding-left:48px!important;padding-right:48px!important;position:sticky;top:0;z-index:2;margin:0 -14px 12px;padding:13px 14px;text-align:center;font-size:17px;color:#fff;background:linear-gradient(#2f86c9,#1f5f98);border-bottom:2px solid #123a5f}
@@ -613,7 +614,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
       </section>
     </div>
   </div>
-  <div id="buildTag">Tool Version 19/11/2026 21:35</div>
+  <div id="buildTag">Tool Version 25/11/2026 21:30</div>
 </main>
 
 <main class="pane" id="pane-sim">
@@ -2364,7 +2365,7 @@ function banner(h) {
   return `<div class="mh"><span>${esc(h.t)}</span>${X}</div>`;
 }
 function showMenu(head, items) {
-  const box = $('#soloMenuBox'); box.innerHTML = banner(head) + items.map((it, i) => `<button class="mi" data-k="${i}">${esc(it[0])}</button>`).join('');
+  const box = $('#soloMenuBox'); box.innerHTML = banner(head) + items.map((it, i) => it[3] === 'hd' ? `<div class="mg">${esc(it[0])}</div>` : `<button class="mi" data-k="${i}">${esc(it[0])}</button>`).join('');
   box.scrollTop = 0;
   box.onclick = e => { if (e.target.closest('[data-x]')) { closeMenu(); return; } const b = e.target.closest('[data-k]'); if (!b) return; const it = items[+b.dataset.k]; if (!it[2]) closeMenu(); it[1](); };
   $('#soloMenu').classList.add('on');
@@ -2493,7 +2494,7 @@ function put(u, z, i, pos, verb) {
   commit(`${verb}: ${cc(u).name} [${zn(L)} → ${NAMES[z]}${['mmz', 'stz', 'emz'].includes(z) ? i + 1 : ''}]`);
 }
 // Positions depend on the zone, not on the card type: any card can sit in a Monster Zone or a Spell & Trap Zone.
-function posOpts(c, z) { if (c.type === 'Token') return [['Face-up ATK', 'u'], ['Face-up DEF', 'd']]; return (z === 'mmz' || z === 'emz') ? [['Face-up ATK', 'u'], ['Face-up DEF', 'd'], ['Face-down DEF', 'f']] : [['Face-up', 'u'], ['Set', 's']]; }
+function posOpts(c, z) { if (c.type === 'Token') return [['Face-up ⚔︎', 'u'], ['Face-up ⛨', 'd']]; return (z === 'mmz' || z === 'emz') ? [['Face-up ⚔︎', 'u'], ['Face-up ⛨', 'd'], ['Face-down ⛨', 'f']] : [['Face-up', 'u'], ['Set', 's']]; }
 function banMenu(u, back) {
   showMenu({ t: 'Banish' }, [['Face-up', () => toZone(u, 'ban', 'd', 'Banish (Face-up)')], ['Face-down', () => toZone(u, 'ban', 'f', 'Banish (Face-down)')], ['Back', back || (() => openCard(u)), 1]]);
 }
@@ -2501,7 +2502,7 @@ function posMenu(u, z) {
   const c = cc(u), o = posOpts(c, z).filter(x => x[1] !== S.P[u]);
   showMenu({ t: 'Position' }, o.map(x => [x[0], () => { S.P[u] = x[1]; commit(`Position: ${c.name} [${zn(find(u))}] → ${x[0]}`); }]).concat([['Back', () => openCard(u), 1]]));
 }
-function validZones(u, kind) {
+function validZones(u, kind, grp) {                       // grp: 'mon' = monster zones only, 'st' = Spell & Trap zones only, none = all
   const tk = isTok(u), L0 = find(u), onB = BOARD.includes(L0.z), v = [];
   const e = (z, i) => {
     const o = S.Z[z][i];
@@ -2512,12 +2513,18 @@ function validZones(u, kind) {
     if (stack || swap) v.push(z + ':' + i);
   };
   if (tk) { for (let i = 0; i < 5; i++) e('mmz', i); return v; }
-  for (let i = 0; i < 5; i++) e('mmz', i); e('emz', 0); e('emz', 1); for (let i = 0; i < 5; i++) e('stz', i); e('field', 0);
+  if (grp !== 'st') { for (let i = 0; i < 5; i++) e('mmz', i); e('emz', 0); e('emz', 1); }
+  if (grp !== 'mon') { for (let i = 0; i < 5; i++) e('stz', i); e('field', 0); }
   return v;
 }
-function startPlace(u, kind) {
-  const v = validZones(u, kind); if (!v.length) { toast('No empty zone available.'); return; }
-  S.pl = { u, kind, v: new Set(v) }; closeList(); draw();
+function startPlace(u, kind, pos, lab, grp) {              // pos/lab: the position was already chosen (Place flow: position first, then the zone)
+  const v = validZones(u, kind, grp); if (!v.length) { toast('No empty zone available.'); return; }
+  S.pl = { u, kind, pos, lab, v: new Set(v) }; closeList(); closeMenu(); draw();
+}
+function placeMenu(u) {                                    // Place: choose the position first (monster positions / Spell & Trap positions), then the zone
+  const go = (o, g) => () => startPlace(u, 'place', o[1], o[0], g);
+  showMenu({ t: 'Position' }, [['Monster Zone', null, 0, 'hd']].concat(posOpts({ type: 'x' }, 'mmz').map(o => [o[0], go(o, 'mon')]),
+    [['Spell & Trap Zone', null, 0, 'hd']], posOpts({ type: 'x' }, 'stz').map(o => [o[0], go(o, 'st')]), [['Back', () => openCard(u), 1]]));
 }
 function doSwap(u, z, i) {
   const c = cc(u), L0 = find(u), o2 = S.Z[z][i];
@@ -2536,8 +2543,9 @@ function stackOn(u, z, i, pos, lab) {                      // u lands on top, in
 }
 function finishPlace(z, i) {
   if (S.pl.kind === 'token') return finishToken(z, i);
-  const { u, kind } = S.pl, c = cc(u), verb = kind === 'move' ? 'Move' : 'Place'; S.pl = null;
+  const { u, kind, pos: pp, lab: pl } = S.pl, c = cc(u), verb = kind === 'move' ? 'Move' : 'Place'; S.pl = null;
   const L0 = find(u), o2 = S.Z[z][i];
+  if (pp) { if (o2 && o2 !== u) stackOn(u, z, i, pp, pl); else put(u, z, i, pp, 'Place (' + pl + ')'); return; }   // position already chosen
   if (o2 && o2 !== u) {                                    // a zone with a card: swap or stack
     const canSwap = BOARD.includes(L0.z) && !(isTok(o2) && L0.z !== 'mmz'), canStack = !isTok(u) && !isTok(o2) && (S.P[o2] === 'u' || S.P[o2] === 'd');
     if (canSwap && canStack) { draw(); showMenu({ t: 'Swap Or Stack' }, [['Swap', () => doSwap(u, z, i)], ['Stack', () => doStack(u, z, i)]]); return; }
@@ -2553,14 +2561,14 @@ const MZ = ['mmz', 'emz'];
 function startToken() {
   if (!S.Z.mmz.some(o => !o)) { toast('No Empty Main Monster Zone.'); return; }
   closeList();
-  showMenu({ t: 'Token' }, [['Face-up ATK', 'u'], ['Face-up DEF', 'd']].map(x => [x[0], () => {
+  showMenu({ t: 'Token' }, [['Face-up ⚔︎', 'u'], ['Face-up ⛨', 'd']].map(x => [x[0], () => {
     S.pl = { kind: 'token', pos: x[1], v: new Set(S.Z.mmz.map((o, i) => o ? null : 'mmz:' + i).filter(Boolean)), msg: 'Choose a Main Monster Zone for the Token. Tap anywhere else to cancel.' }; draw();
   }]));
 }
 function finishToken(z, i) {
   const { pos } = S.pl; S.pl = null; const u = 't' + (++S.tc);
   S.C[u] = { c: { id: 'token', name: 'Token', type: 'Token', img: TOKEN_IMG } };
-  S.Z[z][i] = u; S.P[u] = pos; commit(`Create Token (${pos === 'u' ? 'Face-up ATK' : 'Face-up DEF'}) [${zlab(z, i)}]`);
+  S.Z[z][i] = u; S.P[u] = pos; commit(`Create Token (${pos === 'u' ? 'Face-up ⚔︎' : 'Face-up ⛨'}) [${zlab(z, i)}]`);
 }
 function tokenItems(u) {
   return [['Move / Swap', () => startPlace(u, 'move')], ['Position / Flip', () => posMenu(u, 'mmz'), 1],
@@ -2570,7 +2578,7 @@ function items(u) {                                       // the same menu for e
   if (isTok(u)) return tokenItems(u);
   const { z } = find(u), c = cc(u), bd = BOARD.includes(z), a = [], n = mats(u).length;
   a.push(['Info', () => openInfo(c, true), 1]);
-  a.push([bd ? 'Move / Swap / Stack' : 'Place / Stack', () => startPlace(u, bd ? 'move' : 'place')]);
+  a.push(bd ? ['Move / Swap / Stack', () => startPlace(u, 'move')] : ['Place / Stack', () => placeMenu(u), 1]);
   if (bd && posOpts(c, z).some(x => x[1] !== S.P[u])) a.push(['Position / Flip', () => posMenu(u, z), 1]);
   if (n) a.push([`Materials (${n})`, () => openList('M:' + u)]);
   if (z !== 'hand') a.push(['To Hand', () => toZone(u, 'hand', 'u', 'To Hand')]);
