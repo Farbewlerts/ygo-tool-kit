@@ -355,6 +355,10 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
 .sz.has .zl{display:none}
 .sz .zc{display:contents}
 .sz .gem{position:absolute;left:50%;top:50%;width:70%;transform:translate(-50%,-50%);pointer-events:none}
+.fxlayer{position:fixed;left:0;top:0;width:0;height:0;z-index:40;pointer-events:none}
+.fxlayer .fly{position:fixed;filter:drop-shadow(0 5px 8px rgba(0,0,0,.5));will-change:transform}
+.fxlayer .fly .cd{--tr:none;position:absolute;left:0;top:0;width:100%;height:100%}
+.fxhide{visibility:hidden}
 .dragghost{position:fixed;left:0;top:0;z-index:70;pointer-events:none;touch-action:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.55))}
 .dragghost .cd{--tr:translate(0,0);position:absolute;left:0;top:0;width:100%;height:100%}
 #soloBoard .sz{touch-action:none}
@@ -437,7 +441,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
   header{padding:0 max(12px,env(safe-area-inset-left)) 0 max(12px,env(safe-area-inset-right));gap:0 16px;align-items:center}
   header h1{font-size:16px;padding:13px 0}
   .tab{padding:13px 14px;font-size:14px}
-  #pane-solo.on{display:grid;grid-template-columns:106px minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;column-gap:8px;row-gap:6px;box-sizing:border-box;height:calc(100vh - var(--hh,44px));height:calc(100dvh - var(--hh,44px));max-width:none;padding:6px max(10px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}
+  #pane-solo.on{display:grid;grid-template-columns:var(--sw,106px) minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;column-gap:8px;row-gap:6px;box-sizing:border-box;height:calc(100vh - var(--hh,44px));height:calc(100dvh - var(--hh,44px));max-width:none;padding:6px max(10px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}
   #pane-solo>section.panel{margin:0;padding:6px}
   #pane-solo>section.panel:nth-of-type(1){grid-column:1;grid-row:1 / span 2;overflow-y:auto;overscroll-behavior:contain;min-height:0}
   #pane-solo .stb{flex-direction:column;align-items:stretch;gap:6px}
@@ -448,7 +452,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
   #soloBoard{column-gap:var(--cg,calc(var(--cw)*.5));row-gap:calc(var(--cw)*.14);padding:calc(var(--cw)*.1) 0}
   #soloHandBox{padding-bottom:0}
   .hand{padding:4px 6px;min-height:calc(var(--hw)*1.46 + 8px)}
-  #soloHint.on{position:fixed;left:calc(122px + env(safe-area-inset-left));right:10px;top:calc(var(--hh,44px) + 6px);margin:0;max-width:none;padding:4px 10px;text-align:center;background:rgba(2,16,31,.92);border:1px solid #ffd66b;border-radius:6px;z-index:30;pointer-events:none}
+  #soloHint.on{position:fixed;left:calc(var(--sw,106px) + 16px + env(safe-area-inset-left));right:10px;top:calc(var(--hh,44px) + 6px);margin:0;max-width:none;padding:4px 10px;text-align:center;background:rgba(2,16,31,.92);border:1px solid #ffd66b;border-radius:6px;z-index:30;pointer-events:none}
 }
 /* Draw Simulator: hand cards the same size as the deck cards, 5 per row, centred */
 @media(min-width:621px){
@@ -489,7 +493,13 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
 #pane-solo #soloRp{display:none}
 #pane-solo.rp #soloRp{display:flex}
 #pane-solo.rp .stb:not(#soloRp),#pane-solo.rp #soloInfo,#pane-solo.rp #soloNote{display:none}
-#rpText{flex:0 0 auto;width:100%;font-size:13px;line-height:1.35;word-break:break-word}
+#rpText{flex:0 0 auto;width:100%;height:36px;overflow-y:auto;overscroll-behavior:contain;font-size:13px;line-height:18px;word-break:break-word}   /* fixed height: long and short step texts never move the layout */
+@media(max-width:620px){#rpText{height:54px}}
+@media(orientation:landscape) and (max-height:500px) and (max-width:1000px){
+  #pane-solo.rp>section.panel:nth-of-type(1){display:flex;flex-direction:column}
+  #pane-solo.rp #soloRp{flex:1 1 auto;min-height:0;flex-wrap:nowrap}
+  #pane-solo.rp #rpText{flex:1 1 0;height:auto;min-height:36px}
+}
 #rpText b{color:#ffd66b;margin-right:4px}
 #soloRp .ic{display:block;height:20px;width:auto;margin:0 auto;pointer-events:none}
 #soloRp #rpIcP{height:16px}   /* play / pause pictures fill their whole frame, so they get a smaller frame to match the height of the back / next arrows */
@@ -618,7 +628,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
       </section>
     </div>
   </div>
-  <div id="buildTag">Tool Version 26/11/2026 17:50</div>
+  <div id="buildTag">Tool Version 27/11/2026 16:37</div>
 </main>
 
 <main class="pane" id="pane-sim">
@@ -2246,8 +2256,8 @@ const zn = L => NAMES[L.z] + (['mmz', 'stz', 'emz'].includes(L.z) ? L.i + 1 : ''
 const GRP = z => (z === 'mmz' || z === 'emz') ? 'm' : z === 'stz' ? 's' : 'f';
 const srt = (a, b) => { const x = sortKey(cc(a)), y = sortKey(cc(b)); for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i] - y[i]; return cc(a).name.localeCompare(cc(b).name); };
 const snap = () => JSON.stringify({ Z: S.Z, P: S.P, M: S.M });
-function commit(t) { S.hist.length = S.idx + 1; S.hist.push({ t, s: snap() }); S.idx = S.hist.length - 1; draw(); }
-function restore(i) { const o = JSON.parse(S.hist[i].s); S.Z = o.Z; S.P = o.P; S.M = o.M || {}; S.idx = i; draw(); }
+function commit(t) { S.hist.length = S.idx + 1; S.hist.push({ t, s: snap() }); S.idx = S.hist.length - 1; FX.go = true; draw(); }
+function restore(i, anim) { const o = JSON.parse(S.hist[i].s); S.Z = o.Z; S.P = o.P; S.M = o.M || {}; S.idx = i; FX.go = !!anim; draw(); }
 function remove(u) { const L = find(u); if (!L) return null; if (L.z === 'mat') { S.M[L.h].splice(L.i, 1); if (!S.M[L.h].length) delete S.M[L.h]; } else if (BOARD.includes(L.z)) S.Z[L.z][L.i] = null; else S.Z[L.z].splice(L.i, 1); return L; }
 
 /* ----- pictures: every card of the deck is loaded and decoded before the game starts, so redrawing never shows an empty frame ----- */
@@ -2309,7 +2319,94 @@ function phase() {                                // every breathing element sta
   pane.querySelectorAll('.cd.back img.fr').forEach(e => set(e, 3000));
   pane.querySelectorAll('.sz').forEach(e => { if (e.classList.contains('hl') || e.classList.contains('hl2')) set(e, 2000); else if (e.dataset.ph) { delete e.dataset.ph; e.style.animationDelay = ''; } });
 }
+/* ----- card movement animation -----
+   One mechanism for every route: remember where each card was drawn, redraw, then fly a copy of every card that changed place.
+   To remove the feature: delete this block, the FX.* calls, and the .fxlayer / .fxhide styles. */
+const FX = (() => {
+  const MS = 350, EASE = 'cubic-bezier(.25,.8,.35,1)';
+  let last = new Map(), undo = [], timer = 0;
+  const layer = document.createElement('div'); layer.className = 'fxlayer'; pane.appendChild(layer);
+  const turned = (z, u) => (BOARD.includes(z) || z === 'ban') && (S.P[u] === 'd' || S.P[u] === 'f');
+  function places() {                                                      // where every card is in the current state
+    const m = new Map(), add = (u, k, z, i, h) => m.set(u, { k, z, i, h, rot: turned(z, u) ? -90 : 0 });
+    for (const z in S.Z) S.Z[z].forEach((u, i) => { if (u) add(u, BOARD.includes(z) ? z + ':' + i : z, z, i); });
+    for (const h in S.M) S.M[h].forEach((u, i) => add(u, 'mat:' + h, 'mat', i, h));
+    return m;
+  }
+  const zd = (z, i) => ZD.find(d => d.z === z && (!BOARD.includes(z) || d.i === i));
+  const handEl = u => [...$('#soloHand').children].find(e => e.dataset.u === u);
+  function geom(u, L, all) {                                               // centre and size on screen, read from what is drawn right now
+    if (L.z === 'hand') {
+      const e = handEl(u); if (!e) return null;
+      const r = e.getBoundingClientRect(), b = $('#soloHandBox').getBoundingClientRect();
+      return { x: Math.max(b.left + r.width / 2, Math.min(b.right - r.width / 2, r.left + r.width / 2)), y: r.top + r.height / 2, w: r.width, h: r.height, rot: 0, left: r.left - b.left };
+    }
+    const H = L.z === 'mat' ? all.get(L.h) : L; if (!H) return null;
+    const d = zd(H.z, H.i); if (!d) return null;
+    const r = d.el.getBoundingClientRect(), c = zd('mmz', 0).el.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2, w: c.width, h: c.height, rot: L.rot };
+  }
+  const anchor = z => (z === 'hand' ? $('#soloHandBox') : $('#soloBoard')).getBoundingClientRect();
+  function end() {                                                         // finish whatever is still moving
+    clearTimeout(timer); timer = 0;
+    undo.splice(0).forEach(f => f());
+    layer.textContent = '';
+  }
+  function before() {                                                      // call before the page is redrawn
+    if (!pane.classList.contains('on') || !$('#soloBoard').offsetWidth) return null;
+    const pos = new Map(); last.forEach((L, u) => { const g = geom(u, L, last); if (g) { const a = anchor(L.z); g.x -= a.left; g.y -= a.top; pos.set(u, g); } });
+    const tops = new Map(); ZD.forEach(d => { const e = d.zc.querySelector('.cd'); if (e) tops.set(d, { u: e.dataset.u || null, el: e.cloneNode(true) }); });
+    return { places: last, pos, tops };
+  }
+  const moved = (old, now) => { for (const [u, L] of now) { const o = old.get(u); if (o && o.k !== L.k) return true; } return false; };
+  function face(u, L) {                                                    // the flying card shows the side it will have where it lands
+    if (L.z === 'deck' || (L.z === 'extra' && S.P[u] !== 'x')) return '<div class="cd back"></div>';
+    return cardEl(u, L.z === 'extra' ? ' fu' : '').replace('cd rot', 'cd');
+  }
+  function run(b, now, skip) {
+    const list = [], gone = new Set(skip ? [skip] : []), slides = [];
+    now.forEach((L, u) => {
+      const o = b.places.get(u), was = b.pos.get(u); if (!o || !was) return;              // a new Token just appears
+      const a = anchor(o.z), from = { ...was, x: was.x + a.left, y: was.y + a.top };
+      if (o.k === L.k) {
+        if (L.z === 'hand') { const to = geom(u, L, now); if (to && Math.abs(from.left - to.left) > 1) slides.push({ el: handEl(u), dx: from.left - to.left }); }
+        return;
+      }
+      const to = geom(u, L, now); if (!to) return;
+      if (L.z === 'mat' && Math.hypot(from.x - to.x, from.y - to.y) < 4) return;           // covered where it lies by a card stacked on it: it did not travel
+      gone.add(u);
+      if (u !== skip) list.push({ u, L, from, to, under: o.z === 'mat' });
+    });
+    slides.forEach(s => { const a = s.el.animate([{ transform: `translateX(${s.dx}px)` }, { transform: 'none' }], { duration: MS, easing: EASE }); undo.push(() => a.cancel()); });
+    const hide = e => { e.classList.add('fxhide'); undo.push(() => e.classList.remove('fxhide')); };
+    list.sort((p, q) => q.under - p.under).forEach(({ u, L, from, to }) => {
+      if (L.z === 'hand') hide(handEl(u));
+      else if (L.z !== 'mat') {
+        const d = zd(L.z, L.i), old = b.tops.get(d), top = d.zc.querySelector('.cd:not(.fxunder)');
+        if (top && (top.dataset.u === u || (!old && PILES.includes(L.z)))) {
+          hide(top);
+          if (BOARD.includes(L.z)) { const n = d.zc.querySelector('.cnt'); if (n) hide(n); }
+          if (old && !(old.u && gone.has(old.u))) {                        // keep showing what was there until the card lands
+            const c = old.el; c.classList.add('fxunder'); d.zc.insertBefore(c, d.zc.firstChild); d.el.classList.add('has'); undo.push(() => c.remove());
+          }
+        }
+      }
+      const f = document.createElement('div'); f.className = 'fly';
+      f.style.cssText = `left:${to.x - to.w / 2}px;top:${to.y - to.h / 2}px;width:${to.w}px;height:${to.h}px`;
+      f.innerHTML = face(u, L); layer.appendChild(f);
+      f.animate([{ transform: `translate(${from.x - to.x}px,${from.y - to.y}px) rotate(${from.rot}deg) scale(${from.w / to.w})` }, { transform: `translate(0px,0px) rotate(${to.rot}deg) scale(1)` }], { duration: MS, easing: EASE, fill: 'both' });
+    });
+    if (list.length || slides.length) timer = setTimeout(end, MS);
+  }
+  return { go: false, skip: null, end, before, run, places, moved, remember: m => { last = m; } };
+})();
+addEventListener('resize', FX.end);
+
 function draw() {
+  FX.end();
+  const anim = FX.go, skip = FX.skip; FX.go = false;
+  const was = anim ? FX.before() : null, now = FX.places();
+  if (anim) { FX.skip = null; if (S.list && was && FX.moved(was.places, now)) closeList(); }   // close an open list, so the moving card can be seen
   ZD.forEach(d => {
     const h = zoneInner(d.z, d.i);
     if (d.h !== h) { d.zc.innerHTML = h; d.h = h; d.el.classList.toggle('has', !!h); }
@@ -2321,11 +2418,14 @@ function draw() {
   const ht = $('#soloHint'); ht.classList.toggle('on', !!S.pl);
   ht.textContent = S.pl ? (S.pl.msg || 'Choose a highlighted zone (blue: a zone with a card). Tap anywhere else to cancel.') : '';
   if (S.list) openList(S.list);
+  if (was) FX.run(was, now, skip);
+  FX.remember(now);
   phase();
 }
 const LANDQ = '(orientation: landscape) and (max-height: 500px) and (max-width: 1000px)';
 function fitLand() {                                  // phone held sideways: buttons left, board + hand fill the rest, no page scroll
   setHH();
+  pane.style.setProperty('--sw', '106px');              // measure with the narrowest left column, so the cards never get smaller
   const wrap = $('#soloBoardWrap'), bd = $('#soloBoard'), hand = $('#soloHandBox').closest('section');
   const cs = getComputedStyle(pane), H = pane.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom), W = wrap.clientWidth - 12;
   if (H < 100 || W < 100) return;
@@ -2335,11 +2435,13 @@ function fitLand() {                                  // phone held sideways: bu
   const k = (n2 - n1) / 20, c0 = n1 - k * 40;
   const cw = Math.max(24, Math.min((H - c0 - 1) / k, W / 8.2, 112));
   set(cw);
-  pane.style.setProperty('--cg', Math.max(cw * .4, Math.min(cw * 1.3, (W - 7 * cw) / 6)) + 'px');
+  const cg = Math.max(cw * .4, Math.min(cw * .5, (W - 7 * cw) / 6));   // about half a card: two sideways cards still do not overlap
+  pane.style.setProperty('--cg', cg + 'px');
+  pane.style.setProperty('--sw', 106 + Math.floor(Math.max(0, Math.min(134, W - 7 * cw - 6 * cg - cw * .5))) + 'px');   // the spare width goes to the left column
 }
 function fit() {
   if (matchMedia(LANDQ).matches) { fitLand(); return; }
-  pane.style.removeProperty('--cg');
+  pane.style.removeProperty('--cg'); pane.style.removeProperty('--sw');
   const w = $('#soloBoardWrap').clientWidth - 24; if (w < 100) return;
   const set = cw => { pane.style.setProperty('--cw', cw + 'px'); pane.style.setProperty('--hw', Math.min(110, Math.max(innerWidth >= 900 ? 40 : 64, cw * 1.25)) + 'px'); };
   const top = Math.min(w / 10.05, 112);
@@ -2428,17 +2530,18 @@ async function saveReplay() {
 }
 const rpIcon = playing => { $('#rpIcP').src = playing ? IC.z : IC.p; $('#rpPlay').setAttribute('aria-label', playing ? 'Pause' : 'Play'); };
 function rpStop() { clearInterval(R.timer); R.timer = 0; rpIcon(false); }
-function rpGo(i) {
+function rpGo(i, anim) {
   const st = R.rec.steps; R.i = Math.max(0, Math.min(st.length - 1, i));
   const o = JSON.parse(st[R.i].s); S.Z = o.Z; S.P = o.P; S.M = o.M || {};
   $('#rpText').innerHTML = `<b>${R.i}/${st.length - 1}</b>${esc(st[R.i].t)}`;
+  $('#rpText').scrollTop = 0;
   if (R.i >= st.length - 1) rpStop();
-  draw();
+  FX.go = !!anim; draw();
 }
 function rpPlay() {
   if (R.timer) { rpStop(); return; }
   if (R.i >= R.rec.steps.length - 1) rpGo(0);
-  rpIcon(true); R.timer = setInterval(() => rpGo(R.i + 1), 1100);
+  rpIcon(true); R.timer = setInterval(() => rpGo(R.i + 1, true), 1100);
 }
 async function openReplay(id) {
   let rec; try { rec = (await rAll()).find(r => r.id === id); } catch (e) { }
@@ -2648,15 +2751,15 @@ async function show() {
 const cancelPlace = () => { S.pl = null; draw(); };
 pane.addEventListener('click', async e => {
   const t = e.target, b = t.closest('[data-b]'), rb = t.closest('[data-rp]');
-  if (rb) { const k = rb.dataset.rp; if (k === 'prev') { rpStop(); rpGo(R.i - 1); } else if (k === 'next') { rpStop(); rpGo(R.i + 1); } else if (k === 'play') rpPlay(); else if (k === 'steps') { rpStop(); openSteps(); } else if (k === 'exit') exitReplay(); return; }
+  if (rb) { const k = rb.dataset.rp; if (k === 'prev') { rpStop(); rpGo(R.i - 1, true); } else if (k === 'next') { rpStop(); rpGo(R.i + 1, true); } else if (k === 'play') rpPlay(); else if (k === 'steps') { rpStop(); openSteps(); } else if (k === 'exit') exitReplay(); return; }
   if (R.on) return;
   if (b) {
     const k = b.dataset.b;
     if (k === 'new') { if (S.started && S.idx > 0 && !confirm('Start a new game? The current board will be lost.')) return; newGame(); return; }
     if (!S.started) return;
     if (k === 'reset') { if (S.hist.length < 2) return; if (!confirm('Reset to the start of this game?')) return; await saveReplay(); S.hist.length = 1; restore(0); toast('Reset to the start of the game'); }
-    else if (k === 'draw') drawCard(); else if (k === 'shuffle') shuffle(); else if (k === 'token') startToken(); else if (k === 'undo') { if (S.idx > 0) restore(S.idx - 1); }
-    else if (k === 'redo') { if (S.idx < S.hist.length - 1) restore(S.idx + 1); } else if (k === 'log') openLog();
+    else if (k === 'draw') drawCard(); else if (k === 'shuffle') shuffle(); else if (k === 'token') startToken(); else if (k === 'undo') { if (S.idx > 0) restore(S.idx - 1, true); }
+    else if (k === 'redo') { if (S.idx < S.hist.length - 1) restore(S.idx + 1, true); } else if (k === 'log') openLog();
     return;
   }
   if (t.closest('.sov')) return;
@@ -2671,6 +2774,7 @@ document.addEventListener('click', e => { if (e.target.closest('[data-tab="solo"
 /* ----- drag & drop: a card from the hand or the board is dragged onto a highlighted zone. A plain tap still works as before. ----- */
 let DR = null, noClickUntil = 0;
 pane.addEventListener('click', e => { if (performance.now() < noClickUntil && !e.target.closest('.sov')) { e.stopPropagation(); e.preventDefault(); } }, true);   // the tap that ends a drag must not open a card menu
+pane.addEventListener('pointerdown', e => { if (!e.target.closest('.sov')) { FX.skip = null; FX.end(); } }, true);
 pane.addEventListener('pointerdown', e => {
   if (e.button > 0 || DR || R.on || !S.started || S.pl || S.loading || e.target.closest('.sov')) return;
   const h = e.target.closest('.hc'), z = e.target.closest('.sz'); let u = null;
@@ -2706,7 +2810,7 @@ function drMove(e) {
     if (DR.src) DR.src.style.opacity = '.35';
   }
   e.preventDefault();
-  const cx = e.clientX, cy = e.clientY - (DR.touch ? DR.h * 0.7 : 0);                       // touch: the card is held a little above the finger; mouse: the pointer stays in the middle of the card
+  const cx = e.clientX, cy = e.clientY - (DR.touch ? DR.h * 0.75 : 0);                       // touch: the card is held a little above the finger; mouse: the pointer stays in the middle of the card
   DR.g.style.transform = `translate3d(${cx - DR.w / 2}px,${cy - DR.h / 2}px,0)`;
   const ok = drSnap(cx, cy);
   if (DR.over !== ok) { if (DR.over) DR.over.classList.remove('dh'); if (ok) ok.classList.add('dh'); DR.over = ok; }
@@ -2722,7 +2826,7 @@ function drUp(e) {
   drEnd();
   if (!was.go) return;                                                                       // never became a drag: the normal tap handler takes over
   noClickUntil = performance.now() + 400;
-  if (over && !cancelled && S.pl) finishPlace(over.dataset.z, +over.dataset.i); else cancelPlace();
+  if (over && !cancelled && S.pl) { FX.skip = was.u; finishPlace(over.dataset.z, +over.dataset.i); } else cancelPlace();
 }
 buildBoard(); draw(); setNote();
 })();
