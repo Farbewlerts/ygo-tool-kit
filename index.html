@@ -629,7 +629,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
       </section>
     </div>
   </div>
-  <div id="buildTag">Tool Version 27/11/2026 17:12</div>
+  <div id="buildTag">Tool Version 27/11/2026 23:11</div>
 </main>
 
 <main class="pane" id="pane-sim">
@@ -2324,7 +2324,7 @@ function phase() {                                // every breathing element sta
    One mechanism for every route: remember where each card was drawn, redraw, then fly a copy of every card that changed place.
    To remove the feature: delete this block, the FX.* calls, and the .fxlayer / .fxhide styles. */
 const FX = (() => {
-  const MS = 350, EASE = 'cubic-bezier(.25,.8,.35,1)';
+  const MS = 350, SH = 600, EASE = 'cubic-bezier(.25,.8,.35,1)';
   let last = new Map(), undo = [], timer = 0;
   const layer = document.createElement('div'); layer.className = 'fxlayer'; pane.appendChild(layer);
   const turned = (z, u) => (BOARD.includes(z) || z === 'ban') && (S.P[u] === 'd' || S.P[u] === 'f');
@@ -2364,7 +2364,22 @@ const FX = (() => {
     if (L.z === 'deck' || (L.z === 'extra' && S.P[u] !== 'x')) return '<div class="cd back"></div>';
     return cardEl(u, L.z === 'extra' ? ' fu' : '').replace('cd rot', 'cd');
   }
-  function run(b, now, skip) {
+  function riffle(z) {                                                    // card backs split to both sides and merge again, over the Deck / Extra Deck zone
+    const d = zd(z, 0), r = d.el.getBoundingClientRect(), c = zd('mmz', 0).el.getBoundingClientRect(), off = c.width * .45;
+    [0, -1, 1, -1, 1].forEach((side, k) => {
+      const f = document.createElement('div'); f.className = 'fly';
+      f.style.cssText = `left:${r.left + r.width / 2 - c.width / 2}px;top:${r.top + r.height / 2 - c.height / 2}px;width:${c.width}px;height:${c.height}px`;
+      f.innerHTML = '<div class="cd back"></div>'; layer.appendChild(f);
+      const out = `translate(${side * off}px,${k > 2 ? -3 : 0}px) rotate(${side * 7}deg)`, home = 'translate(0px,0px) rotate(0deg)';
+      if (side) f.animate([{ transform: home }, { transform: out }, { transform: home }], { duration: SH / 2, delay: k > 2 ? 60 : 0, iterations: k > 2 ? 1 : 2, easing: 'ease-in-out' });
+      undo.push(() => f.remove());
+    });
+    const parts = [...layer.children];
+    const t = setTimeout(() => parts.forEach(e => e.remove()), SH); undo.push(() => clearTimeout(t));
+  }
+  function run(b, now, skip, shuf) {
+    const wait = shuf ? SH : 0;                                            // cards leave only after the shuffle
+    if (shuf) riffle(shuf);
     const list = [], gone = new Set(skip ? [skip] : []), slides = [];
     now.forEach((L, u) => {
       const o = b.places.get(u), was = b.pos.get(u); if (!o || !was) return;              // a new Token just appears
@@ -2395,17 +2410,18 @@ const FX = (() => {
       const f = document.createElement('div'); f.className = 'fly';
       f.style.cssText = `left:${to.x - to.w / 2}px;top:${to.y - to.h / 2}px;width:${to.w}px;height:${to.h}px`;
       f.innerHTML = face(u, L); layer.appendChild(f);
-      f.animate([{ transform: `translate(${from.x - to.x}px,${from.y - to.y}px) rotate(${from.rot}deg) scale(${from.w / to.w})` }, { transform: `translate(0px,0px) rotate(${to.rot}deg) scale(1)` }], { duration: MS, easing: EASE, fill: 'both' });
+      if (wait) f.animate([{ opacity: 0 }, { opacity: 0 }], { duration: wait });
+      f.animate([{ transform: `translate(${from.x - to.x}px,${from.y - to.y}px) rotate(${from.rot}deg) scale(${from.w / to.w})` }, { transform: `translate(0px,0px) rotate(${to.rot}deg) scale(1)` }], { duration: MS, delay: wait, easing: EASE, fill: 'both' });
     });
-    if (list.length || slides.length) timer = setTimeout(end, MS);
+    if (list.length || slides.length || shuf) timer = setTimeout(end, wait + (list.length || slides.length ? MS : 0));
   }
-  return { MS, go: false, skip: null, end, before, run, places, moved, remember: m => { last = m; } };
+  return { MS, go: false, skip: null, shuf: null, end, before, run, places, moved, remember: m => { last = m; } };
 })();
 addEventListener('resize', FX.end);
 
 function draw() {
   FX.end();
-  const anim = FX.go, skip = FX.skip; FX.go = false;
+  const anim = FX.go, skip = FX.skip, shuf = FX.shuf; FX.go = false; FX.shuf = null;
   const now = FX.places(), was = anim && !S.list ? FX.before() : null;     // an open list covers the table: it stays open and nothing flies
   clearTimeout(reT);
   if (anim) FX.skip = null;
@@ -2420,7 +2436,7 @@ function draw() {
   const ht = $('#soloHint'); ht.classList.toggle('on', !!S.pl);
   ht.textContent = S.pl ? (S.pl.msg || 'Choose a highlighted zone (blue: a zone with a card). Tap anywhere else to cancel.') : '';
   if (S.list) openList(S.list);
-  if (was) FX.run(was, now, skip);
+  if (was) FX.run(was, now, skip, shuf);
   FX.remember(now);
   phase();
 }
@@ -2539,7 +2555,8 @@ async function saveReplay() {
 const rpIcon = playing => { $('#rpIcP').src = playing ? IC.z : IC.p; $('#rpPlay').setAttribute('aria-label', playing ? 'Pause' : 'Play'); };
 function rpStop() { clearInterval(R.timer); R.timer = 0; rpIcon(false); }
 function rpGo(i, anim) {
-  const st = R.rec.steps; R.i = Math.max(0, Math.min(st.length - 1, i));
+  const st = R.rec.steps, from = R.i; R.i = Math.max(0, Math.min(st.length - 1, i));
+  if (anim && R.i === from + 1) { const t = st[R.i].t; FX.shuf = t.startsWith('Shuffle Deck') ? 'deck' : t.startsWith('Banish Random') ? 'extra' : null; }
   const o = JSON.parse(st[R.i].s); S.Z = o.Z; S.P = o.P; S.M = o.M || {};
   $('#rpText').innerHTML = `<b>${R.i}/${st.length - 1}</b>${esc(st[R.i].t)}`;
   $('#rpText').scrollTop = 0;
@@ -2711,9 +2728,9 @@ function extraDeckMenu() {
   showMenu({ deck: 'Extra Deck · ' + S.Z.extra.length }, [['View', () => openList('extra')],
     ['Banish Random', () => showMenu({ t: 'Banish Random' }, [['Face-up', () => banRandom('d', 'Face-up')], ['Face-down', () => banRandom('f', 'Face-down')], ['Back', extraDeckMenu, 1]]), 1]]);
 }
-function banRandom(pos, lab) {                            // shuffle the Extra Deck first, then banish the top card
-  if (!S.Z.extra.length) return; shuffleArr(S.Z.extra);
-  toZone(S.Z.extra[0], 'ban', pos, `Banish Random (${lab}, Extra Deck shuffled)`);
+function banRandom(pos, lab) {                            // a random card is banished; the others keep their order (the shuffle is only shown)
+  const n = S.Z.extra.length; if (!n) return; FX.shuf = 'extra';
+  toZone(S.Z.extra[Math.floor(Math.random() * n)], 'ban', pos, `Banish Random (${lab})`);
 }
 function openCard(u) { showMenu({ u }, items(u)); }
 function deckMenu() {
@@ -2722,8 +2739,8 @@ function deckMenu() {
     ['View', () => openList('deck')], ['Banish Top Card', () => banMenu(top(), deckMenu), 1],
     ['Send Top Card To GY', () => toZone(top(), 'gy', 'u', 'To GY (Top Of Deck)')]]);
 }
-function drawCard() { if (!S.Z.deck.length) { toast('The deck is empty.'); return; } const u = S.Z.deck.shift(); S.Z.hand.unshift(u); S.P[u] = 'u'; commit('Draw: ' + cc(u).name); toast('Drew: ' + cc(u).name); }
-function shuffle() { if (S.Z.deck.length < 2) { toast('Not enough cards in the deck to shuffle.'); return; } shuffleArr(S.Z.deck); commit('Shuffle Deck'); toast('Deck shuffled'); }
+function drawCard() { if (!S.Z.deck.length) { toast('The deck is empty.'); return; } const u = S.Z.deck.shift(); S.Z.hand.unshift(u); S.P[u] = 'u'; commit('Draw: ' + cc(u).name); }
+function shuffle() { if (S.Z.deck.length < 2) { toast('Not enough cards in the deck to shuffle.'); return; } shuffleArr(S.Z.deck); FX.shuf = 'deck'; commit('Shuffle Deck'); }
 
 /* ----- game: the deck always comes from the Deck Builder ----- */
 const deckEnts = () => (state.entries || []).filter(e => (e.zone === 'main' || e.zone === 'extra') && e.qty > 0);
