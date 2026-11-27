@@ -345,8 +345,8 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
 #soloNote{display:none;color:#ffd66b;font-size:13px;margin-top:6px}
 #soloNote.on{display:block}
 #soloHint{display:none;color:#ffd66b;font-size:13px}
-#soloHint.on{display:block;margin-top:8px}
-@media(min-width:900px){#pane-solo{padding-bottom:12px}#pane-solo>section.panel:first-child{position:relative}#soloHint.on{position:absolute;right:20px;top:20px;margin:0;max-width:55%;text-align:right}}
+#soloHint.on{display:block;position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:30;pointer-events:none;padding:8px 12px;text-align:center;line-height:1.35;background:rgba(2,16,31,.94);border:1px solid #ffd66b;border-radius:8px}   /* floating: the layout never moves */
+@media(min-width:900px){#pane-solo{padding-bottom:12px}#pane-solo>section.panel:first-child{position:relative}#soloHint.on{position:absolute;left:auto;right:20px;top:20px;bottom:auto;max-width:55%;padding:0;text-align:right;background:none;border:0}}
 #soloBoard{display:grid;grid-template-columns:repeat(7,var(--cw));column-gap:calc(var(--cw)*.5);row-gap:calc(var(--cw)*.3);justify-content:center;padding:calc(var(--cw)*.25) 0}
 .sz{position:relative;width:var(--cw);height:var(--ch);border:1px solid rgba(255,255,255,.3);border-radius:4px;box-sizing:border-box}
 .sz.ban{width:var(--ch);height:var(--cw);justify-self:end}
@@ -452,7 +452,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
   #soloBoard{column-gap:var(--cg,calc(var(--cw)*.5));row-gap:calc(var(--cw)*.14);padding:calc(var(--cw)*.1) 0}
   #soloHandBox{padding-bottom:0}
   .hand{padding:4px 6px;min-height:calc(var(--hw)*1.46 + 8px)}
-  #soloHint.on{position:fixed;left:calc(var(--sw,106px) + 16px + env(safe-area-inset-left));right:10px;top:calc(var(--hh,44px) + 6px);margin:0;max-width:none;padding:4px 10px;text-align:center;background:rgba(2,16,31,.92);border:1px solid #ffd66b;border-radius:6px;z-index:30;pointer-events:none}
+  #soloHint.on{position:fixed;left:calc(var(--sw,106px) + 16px + env(safe-area-inset-left));right:10px;top:calc(var(--hh,44px) + 6px);bottom:auto;margin:0;max-width:none;padding:4px 10px;text-align:center;background:rgba(2,16,31,.92);border:1px solid #ffd66b;border-radius:6px;z-index:30;pointer-events:none}
 }
 /* Draw Simulator: hand cards the same size as the deck cards, 5 per row, centred */
 @media(min-width:621px){
@@ -497,8 +497,9 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
 @media(max-width:620px){#rpText{height:54px}}
 @media(orientation:landscape) and (max-height:500px) and (max-width:1000px){
   #pane-solo.rp>section.panel:nth-of-type(1){display:flex;flex-direction:column}
-  #pane-solo.rp #soloRp{flex:1 1 auto;min-height:0;flex-wrap:nowrap}
-  #pane-solo.rp #rpText{flex:1 1 0;height:auto;min-height:36px}
+  #pane-solo.rp #soloRp{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(36px,1fr) auto auto auto}
+  #pane-solo.rp #rpText{grid-column:1 / -1;height:auto;min-height:0}
+  #pane-solo.rp #rpPlay{grid-column:1 / -1}
 }
 #rpText b{color:#ffd66b;margin-right:4px}
 #soloRp .ic{display:block;height:20px;width:auto;margin:0 auto;pointer-events:none}
@@ -628,7 +629,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
       </section>
     </div>
   </div>
-  <div id="buildTag">Tool Version 27/11/2026 16:37</div>
+  <div id="buildTag">Tool Version 27/11/2026 17:12</div>
 </main>
 
 <main class="pane" id="pane-sim">
@@ -2398,15 +2399,16 @@ const FX = (() => {
     });
     if (list.length || slides.length) timer = setTimeout(end, MS);
   }
-  return { go: false, skip: null, end, before, run, places, moved, remember: m => { last = m; } };
+  return { MS, go: false, skip: null, end, before, run, places, moved, remember: m => { last = m; } };
 })();
 addEventListener('resize', FX.end);
 
 function draw() {
   FX.end();
   const anim = FX.go, skip = FX.skip; FX.go = false;
-  const was = anim ? FX.before() : null, now = FX.places();
-  if (anim) { FX.skip = null; if (S.list && was && FX.moved(was.places, now)) closeList(); }   // close an open list, so the moving card can be seen
+  const now = FX.places(), was = anim && !S.list ? FX.before() : null;     // an open list covers the table: it stays open and nothing flies
+  clearTimeout(reT);
+  if (anim) FX.skip = null;
   ZD.forEach(d => {
     const h = zoneInner(d.z, d.i);
     if (d.h !== h) { d.zc.innerHTML = h; d.h = h; d.el.classList.toggle('has', !!h); }
@@ -2435,9 +2437,9 @@ function fitLand() {                                  // phone held sideways: bu
   const k = (n2 - n1) / 20, c0 = n1 - k * 40;
   const cw = Math.max(24, Math.min((H - c0 - 1) / k, W / 8.2, 112));
   set(cw);
-  const cg = Math.max(cw * .4, Math.min(cw * .5, (W - 7 * cw) / 6));   // about half a card: two sideways cards still do not overlap
-  pane.style.setProperty('--cg', cg + 'px');
-  pane.style.setProperty('--sw', 106 + Math.floor(Math.max(0, Math.min(134, W - 7 * cw - 6 * cg - cw * .5))) + 'px');   // the spare width goes to the left column
+  const side = Math.floor(Math.max(0, Math.min(114, W - 10.5 * cw)));   // left column first: 106px plus up to 114px of spare width
+  pane.style.setProperty('--sw', 106 + side + 'px');
+  pane.style.setProperty('--cg', Math.max(cw * .4, Math.min(cw * .75, (W - side - 7.5 * cw) / 6)) + 'px');   // then the zone gaps, between half (two sideways cards just clear) and 3/4 of a card
 }
 function fit() {
   if (matchMedia(LANDQ).matches) { fitLand(); return; }
@@ -2483,6 +2485,12 @@ function openList(z) {
   $('#slh').innerHTML = `${esc(mt ? 'Materials' : NAMES[z])} (${a.length})<button class="sx" data-x="1" aria-label="Close">✕</button>`;
   sync($('#slg'), g.map(o => ({ k: o.u, h: `<div class="lt" data-u="${o.u}">${cardEl(o.u, S.P[o.u] === 'x' ? ' fu' : '')}${o.n > 1 ? `<span class="cnt">${o.n}</span>` : ''}</div>` })));
   $('#soloList').classList.add('on'); phase();
+}
+let reT = 0;
+function reopenList(b, wait) {                           // a card was placed from a list: bring that list back, at the same scroll position
+  if (!b) return;
+  const go = () => { openList(b.z); $('#soloListBox').scrollTop = b.top; };
+  clearTimeout(reT); if (wait) reT = setTimeout(go, wait); else go();
 }
 function closeList() { S.list = null; $('#soloList').classList.remove('on'); }
 $('#soloList').addEventListener('click', e => {
@@ -2626,7 +2634,8 @@ function validZones(u, kind, grp) {                       // grp: 'mon' = monste
 }
 function startPlace(u, kind, pos, lab, grp) {              // pos/lab: the position was already chosen (Place flow: position first, then the zone)
   const v = validZones(u, kind, grp); if (!v.length) { toast('No empty zone available.'); return; }
-  S.pl = { u, kind, pos, lab, v: new Set(v) }; closeList(); closeMenu(); draw();
+  const back = S.list ? { z: S.list, top: $('#soloListBox').scrollTop } : null;
+  S.pl = { u, kind, pos, lab, back, v: new Set(v) }; closeList(); closeMenu(); draw();
 }
 function placeMenu(u) {                                    // Place: choose the position first (monster positions / Spell & Trap positions), then the zone
   const go = (o, g) => () => startPlace(u, 'place', o[1], o[0], g);
@@ -2650,9 +2659,9 @@ function stackOn(u, z, i, pos, lab) {                      // u lands on top, in
 }
 function finishPlace(z, i) {
   if (S.pl.kind === 'token') return finishToken(z, i);
-  const { u, kind, pos: pp, lab: pl } = S.pl, c = cc(u), verb = kind === 'move' ? 'Move' : 'Place'; S.pl = null;
+  const { u, kind, pos: pp, lab: pl, back } = S.pl, c = cc(u), verb = kind === 'move' ? 'Move' : 'Place'; S.pl = null;
   const L0 = find(u), o2 = S.Z[z][i];
-  if (pp) { if (o2 && o2 !== u) stackOn(u, z, i, pp, pl); else put(u, z, i, pp, 'Place (' + pl + ')'); return; }   // position already chosen
+  if (pp) { if (o2 && o2 !== u) stackOn(u, z, i, pp, pl); else put(u, z, i, pp, 'Place (' + pl + ')'); reopenList(back, FX.MS + 30); return; }   // position already chosen
   if (o2 && o2 !== u) {                                    // a zone with a card: swap or stack
     const canSwap = BOARD.includes(L0.z) && !(isTok(o2) && L0.z !== 'mmz'), canStack = !isTok(u) && !isTok(o2) && (S.P[o2] === 'u' || S.P[o2] === 'd');
     if (canSwap && canStack) { draw(); showMenu({ t: 'Swap Or Stack' }, [['Swap', () => doSwap(u, z, i)], ['Stack', () => doStack(u, z, i)]]); return; }
@@ -2748,7 +2757,7 @@ async function show() {
   if (!S.started && !S.loading && deckEnts().length) await newGame();
   setNote(); draw();
 }
-const cancelPlace = () => { S.pl = null; draw(); };
+const cancelPlace = () => { const b = S.pl && S.pl.back; S.pl = null; draw(); reopenList(b); };
 pane.addEventListener('click', async e => {
   const t = e.target, b = t.closest('[data-b]'), rb = t.closest('[data-rp]');
   if (rb) { const k = rb.dataset.rp; if (k === 'prev') { rpStop(); rpGo(R.i - 1, true); } else if (k === 'next') { rpStop(); rpGo(R.i + 1, true); } else if (k === 'play') rpPlay(); else if (k === 'steps') { rpStop(); openSteps(); } else if (k === 'exit') exitReplay(); return; }
@@ -2774,7 +2783,7 @@ document.addEventListener('click', e => { if (e.target.closest('[data-tab="solo"
 /* ----- drag & drop: a card from the hand or the board is dragged onto a highlighted zone. A plain tap still works as before. ----- */
 let DR = null, noClickUntil = 0;
 pane.addEventListener('click', e => { if (performance.now() < noClickUntil && !e.target.closest('.sov')) { e.stopPropagation(); e.preventDefault(); } }, true);   // the tap that ends a drag must not open a card menu
-pane.addEventListener('pointerdown', e => { if (!e.target.closest('.sov')) { FX.skip = null; FX.end(); } }, true);
+pane.addEventListener('pointerdown', e => { if (!e.target.closest('.sov')) { FX.skip = null; FX.end(); clearTimeout(reT); } }, true);
 pane.addEventListener('pointerdown', e => {
   if (e.button > 0 || DR || R.on || !S.started || S.pl || S.loading || e.target.closest('.sov')) return;
   const h = e.target.closest('.hc'), z = e.target.closest('.sz'); let u = null;
