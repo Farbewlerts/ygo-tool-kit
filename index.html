@@ -358,6 +358,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
 .fxlayer{position:fixed;left:0;top:0;width:0;height:0;z-index:40;pointer-events:none}
 .fxlayer .fly{position:fixed;filter:drop-shadow(0 5px 8px rgba(0,0,0,.5));will-change:transform}
 .fxlayer .fly .cd{--tr:none;position:absolute;left:0;top:0;width:100%;height:100%}
+.fxlayer .fxcnt{position:fixed;z-index:200}
 .fxhide{visibility:hidden}
 .dragghost{position:fixed;left:0;top:0;z-index:70;pointer-events:none;touch-action:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.55))}
 .dragghost .cd{--tr:translate(0,0);position:absolute;left:0;top:0;width:100%;height:100%}
@@ -629,7 +630,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
       </section>
     </div>
   </div>
-  <div id="buildTag">Tool Version 27/11/2026 23:11</div>
+  <div id="buildTag">Tool Version 28/11/2026 06:22</div>
 </main>
 
 <main class="pane" id="pane-sim">
@@ -2324,7 +2325,7 @@ function phase() {                                // every breathing element sta
    One mechanism for every route: remember where each card was drawn, redraw, then fly a copy of every card that changed place.
    To remove the feature: delete this block, the FX.* calls, and the .fxlayer / .fxhide styles. */
 const FX = (() => {
-  const MS = 350, SH = 600, EASE = 'cubic-bezier(.25,.8,.35,1)';
+  const MS = 350, SH = 600, STEP = 120, EASE = 'cubic-bezier(.25,.8,.35,1)';
   let last = new Map(), undo = [], timer = 0;
   const layer = document.createElement('div'); layer.className = 'fxlayer'; pane.appendChild(layer);
   const turned = (z, u) => (BOARD.includes(z) || z === 'ban') && (S.P[u] === 'd' || S.P[u] === 'f');
@@ -2377,8 +2378,44 @@ const FX = (() => {
     const parts = [...layer.children];
     const t = setTimeout(() => parts.forEach(e => e.remove()), SH); undo.push(() => clearTimeout(t));
   }
+  const slot = (L, all) => { const H = L.z === 'mat' ? all.get(L.h) : L; return H && H.z !== 'hand' ? zd(H.z, H.i) : null; };   // the zone a card counts in
+  function stagger(list, b, now, base) {                                  // a stack leaves top card first; coming back, the bottom card goes first and the top card last
+    list.forEach(f => { f.delay = base; f.rank = 0; });
+    const done = new Set();
+    [['o', b.places, 1], ['L', now, -1]].forEach(([key, all, dir]) => {
+      const groups = new Map();
+      list.forEach(f => { const d = slot(f[key], all); if (!done.has(f) && d && BOARD.includes(d.z)) groups.set(d, (groups.get(d) || []).concat(f)); });
+      groups.forEach(g => {
+        if (g.length < 2) return;
+        const depth = f => f[key].z === 'mat' ? f[key].i + 1 : 0;
+        g.sort((p, q) => dir * (depth(p) - depth(q))).forEach((f, k) => { f.delay = base + k * STEP; f.rank = dir > 0 ? -k : k; done.add(f); });
+      });
+    });
+    list.sort((p, q) => p.rank - q.rank || q.under - p.under);           // drawing order: later in the list is drawn on top
+  }
+  function counters(list, b, now) {                                       // a number drops when a card leaves a zone and rises when it arrives
+    const ev = new Map(), add = (d, t, n) => { if (d) { if (!ev.has(d)) ev.set(d, []); ev.get(d).push({ t, n }); } };
+    list.forEach(f => {
+      let w = 1;                                                           // materials that travel along with their top card count with it
+      if (BOARD.includes(f.o.z) && BOARD.includes(f.L.z)) now.forEach((M, m) => { const q = b.places.get(m); if (M.h === f.u && q && q.h === f.u) w++; });
+      add(slot(f.o, b.places), f.delay, -w); add(slot(f.L, now), f.delay + MS, w);
+    });
+    ev.forEach((list, d) => {
+      let v = 0; now.forEach(L => { if (slot(L, now) === d) v++; });
+      list.forEach(e => v -= e.n);                                         // what the zone showed before anything moved
+      const real = d.zc.querySelector('.cnt'); if (real) { real.classList.add('fxhide'); undo.push(() => real.classList.remove('fxhide')); }
+      const r = d.el.getBoundingClientRect(), box = document.createElement('div'), n = document.createElement('span');
+      box.className = 'fxcnt' + (d.z === 'ban' ? ' ban' : ''); n.className = 'cnt';
+      box.style.cssText = `left:${r.left + d.el.clientLeft}px;top:${r.top + d.el.clientTop}px;width:${d.el.clientWidth}px;height:${d.el.clientHeight}px`;
+      box.appendChild(n); layer.appendChild(box);
+      const show = () => { const k = BOARD.includes(d.z) ? v - 1 : v; n.textContent = k; n.style.display = k > 0 ? '' : 'none'; };   // on the table the number is the materials under the top card
+      list.forEach(e => { if (!e.t) v += e.n; });
+      show();
+      list.forEach(e => { if (e.t) { const t = setTimeout(() => { v += e.n; show(); }, e.t); undo.push(() => clearTimeout(t)); } });
+    });
+  }
   function run(b, now, skip, shuf) {
-    const wait = shuf ? SH : 0;                                            // cards leave only after the shuffle
+    const base = shuf ? SH - MS : 0;                                       // after a shuffle starts, the card leaves late enough to land as the shuffle ends
     if (shuf) riffle(shuf);
     const list = [], gone = new Set(skip ? [skip] : []), slides = [];
     now.forEach((L, u) => {
@@ -2391,17 +2428,17 @@ const FX = (() => {
       const to = geom(u, L, now); if (!to) return;
       if (L.z === 'mat' && Math.hypot(from.x - to.x, from.y - to.y) < 4) return;           // covered where it lies by a card stacked on it: it did not travel
       gone.add(u);
-      if (u !== skip) list.push({ u, L, from, to, under: o.z === 'mat' });
+      if (u !== skip) list.push({ u, o, L, from, to, under: o.z === 'mat' });
     });
     slides.forEach(s => { const a = s.el.animate([{ transform: `translateX(${s.dx}px)` }, { transform: 'none' }], { duration: MS, easing: EASE }); undo.push(() => a.cancel()); });
     const hide = e => { e.classList.add('fxhide'); undo.push(() => e.classList.remove('fxhide')); };
-    list.sort((p, q) => q.under - p.under).forEach(({ u, L, from, to }) => {
+    stagger(list, b, now, base);
+    list.forEach(({ u, L, from, to, delay }) => {
       if (L.z === 'hand') hide(handEl(u));
       else if (L.z !== 'mat') {
         const d = zd(L.z, L.i), old = b.tops.get(d), top = d.zc.querySelector('.cd:not(.fxunder)');
         if (top && (top.dataset.u === u || (!old && PILES.includes(L.z)))) {
           hide(top);
-          if (BOARD.includes(L.z)) { const n = d.zc.querySelector('.cnt'); if (n) hide(n); }
           if (old && !(old.u && gone.has(old.u))) {                        // keep showing what was there until the card lands
             const c = old.el; c.classList.add('fxunder'); d.zc.insertBefore(c, d.zc.firstChild); d.el.classList.add('has'); undo.push(() => c.remove());
           }
@@ -2410,18 +2447,22 @@ const FX = (() => {
       const f = document.createElement('div'); f.className = 'fly';
       f.style.cssText = `left:${to.x - to.w / 2}px;top:${to.y - to.h / 2}px;width:${to.w}px;height:${to.h}px`;
       f.innerHTML = face(u, L); layer.appendChild(f);
-      if (wait) f.animate([{ opacity: 0 }, { opacity: 0 }], { duration: wait });
-      f.animate([{ transform: `translate(${from.x - to.x}px,${from.y - to.y}px) rotate(${from.rot}deg) scale(${from.w / to.w})` }, { transform: `translate(0px,0px) rotate(${to.rot}deg) scale(1)` }], { duration: MS, delay: wait, easing: EASE, fill: 'both' });
+      if (base) f.animate([{ opacity: 0 }, { opacity: 0 }], { duration: base });          // still inside the deck while it waits
+      f.animate([{ transform: `translate(${from.x - to.x}px,${from.y - to.y}px) rotate(${from.rot}deg) scale(${from.w / to.w})` }, { transform: `translate(0px,0px) rotate(${to.rot}deg) scale(1)` }], { duration: MS, delay, easing: EASE, fill: 'both' });
+      if (PILES.includes(L.z)) { const t = setTimeout(() => f.style.zIndex = 90 - Math.min(L.i, 89), delay + MS); undo.push(() => clearTimeout(t)); f.style.zIndex = 100; }   // landed cards lie in pile order
     });
-    if (list.length || slides.length || shuf) timer = setTimeout(end, wait + (list.length || slides.length ? MS : 0));
+    counters(list, b, now);
+    const total = Math.max(shuf ? SH : 0, slides.length ? MS : 0, ...list.map(f => f.delay + MS));
+    FX.dur = total;
+    if (total) timer = setTimeout(end, total);
   }
-  return { MS, go: false, skip: null, shuf: null, end, before, run, places, moved, remember: m => { last = m; } };
+  return { MS, dur: 0, go: false, skip: null, shuf: null, end, before, run, places, moved, remember: m => { last = m; } };
 })();
 addEventListener('resize', FX.end);
 
 function draw() {
   FX.end();
-  const anim = FX.go, skip = FX.skip, shuf = FX.shuf; FX.go = false; FX.shuf = null;
+  const anim = FX.go, skip = FX.skip, shuf = FX.shuf; FX.go = false; FX.shuf = null; FX.dur = 0;
   const now = FX.places(), was = anim && !S.list ? FX.before() : null;     // an open list covers the table: it stays open and nothing flies
   clearTimeout(reT);
   if (anim) FX.skip = null;
@@ -2553,7 +2594,7 @@ async function saveReplay() {
   } catch (e) { }
 }
 const rpIcon = playing => { $('#rpIcP').src = playing ? IC.z : IC.p; $('#rpPlay').setAttribute('aria-label', playing ? 'Pause' : 'Play'); };
-function rpStop() { clearInterval(R.timer); R.timer = 0; rpIcon(false); }
+function rpStop() { clearTimeout(R.timer); R.timer = 0; rpIcon(false); }
 function rpGo(i, anim) {
   const st = R.rec.steps, from = R.i; R.i = Math.max(0, Math.min(st.length - 1, i));
   if (anim && R.i === from + 1) { const t = st[R.i].t; FX.shuf = t.startsWith('Shuffle Deck') ? 'deck' : t.startsWith('Banish Random') ? 'extra' : null; }
@@ -2566,7 +2607,8 @@ function rpGo(i, anim) {
 function rpPlay() {
   if (R.timer) { rpStop(); return; }
   if (R.i >= R.rec.steps.length - 1) rpGo(0);
-  rpIcon(true); R.timer = setInterval(() => rpGo(R.i + 1, true), 1100);
+  const tick = () => { rpGo(R.i + 1, true); if (R.timer) R.timer = setTimeout(tick, Math.max(1100, FX.dur + 350)); };   // a long stack gets the time it needs
+  rpIcon(true); R.timer = setTimeout(tick, 1100);
 }
 async function openReplay(id) {
   let rec; try { rec = (await rAll()).find(r => r.id === id); } catch (e) { }
@@ -2678,7 +2720,7 @@ function finishPlace(z, i) {
   if (S.pl.kind === 'token') return finishToken(z, i);
   const { u, kind, pos: pp, lab: pl, back } = S.pl, c = cc(u), verb = kind === 'move' ? 'Move' : 'Place'; S.pl = null;
   const L0 = find(u), o2 = S.Z[z][i];
-  if (pp) { if (o2 && o2 !== u) stackOn(u, z, i, pp, pl); else put(u, z, i, pp, 'Place (' + pl + ')'); reopenList(back, FX.MS + 30); return; }   // position already chosen
+  if (pp) { if (o2 && o2 !== u) stackOn(u, z, i, pp, pl); else put(u, z, i, pp, 'Place (' + pl + ')'); reopenList(back, (FX.dur || FX.MS) + 30); return; }   // position already chosen
   if (o2 && o2 !== u) {                                    // a zone with a card: swap or stack
     const canSwap = BOARD.includes(L0.z) && !(isTok(o2) && L0.z !== 'mmz'), canStack = !isTok(u) && !isTok(o2) && (S.P[o2] === 'u' || S.P[o2] === 'd');
     if (canSwap && canStack) { draw(); showMenu({ t: 'Swap Or Stack' }, [['Swap', () => doSwap(u, z, i)], ['Stack', () => doStack(u, z, i)]]); return; }
