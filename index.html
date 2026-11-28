@@ -629,7 +629,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
       </section>
     </div>
   </div>
-  <div id="buildTag">Tool Version 28/11/2026 07:00</div>
+  <div id="buildTag">Tool Version 28/11/2026 07:18</div>
 </main>
 
 <main class="pane" id="pane-sim">
@@ -2659,7 +2659,10 @@ function toZone(u, to, pos, verb) {
   if (to === 'gy') a.gy.unshift(u);                       // a stack falls top card first: each later card lands on the one before it
   if (mm.length) { mm.forEach(m => { a.gy.unshift(m); S.P[m] = 'u'; }); delete S.M[u]; verb += ` (${mm.length} Material${mm.length > 1 ? 's' : ''} → GY)`; }
   if (to === 'hand') a.hand.unshift(u); else if (to === 'ban') a.ban.unshift(u);
-  else if (to === 'dtop') a.deck.unshift(u); else if (to === 'dbot') a.deck.push(u); else if (to === 'extra') a.extra[pos === 'x' ? 'unshift' : 'push'](u);
+  else if (to === 'dtop') a.deck.unshift(u); else if (to === 'dbot') a.deck.push(u); else if (to === 'extra') {
+    if (pos === 'x') a.extra.unshift(u);                     // face-up cards stay on top, newest first
+    else { const j = a.extra.findIndex(q => S.P[q] !== 'x' && srt(u, q) < 0); a.extra.splice(j < 0 ? a.extra.length : j, 0, u); }   // face-down cards go back to their Deck Builder place
+  }
   S.P[u] = pos || 'u';
   commit(`${verb}: ${c.name} [${zn(L)}]`);
 }
@@ -2799,7 +2802,7 @@ function setNote() {
 }
 async function newGame() {
   if (S.loading) return;
-  const ents = deckEnts();
+  const ents = deckEnts().sort(sortEntries);             // Deck Builder order: it stays visible in the Extra Deck (the Main Deck is shuffled below)
   if (!ents.length) { toast('Build a deck first'); setNote(); return; }
   await saveReplay();
   S.loading = true; setNote();
