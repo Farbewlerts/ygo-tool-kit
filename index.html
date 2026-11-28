@@ -344,9 +344,9 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
 #soloInfo{color:var(--muted);font-size:13px;margin-top:8px}
 #soloNote{display:none;color:#ffd66b;font-size:13px;margin-top:6px}
 #soloNote.on{display:block}
-#soloHint{display:none;color:#ffd66b;font-size:13px}
-#soloHint.on{display:block;position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:30;pointer-events:none;padding:8px 12px;text-align:center;line-height:1.35;background:rgba(2,16,31,.94);border:1px solid #ffd66b;border-radius:8px}   /* floating: the layout never moves */
-@media(min-width:900px){#pane-solo{padding-bottom:12px}#pane-solo>section.panel:first-child{position:relative}#soloHint.on{position:absolute;left:auto;right:20px;top:20px;bottom:auto;max-width:55%;padding:0;text-align:right;background:none;border:0}}
+#soloHint{display:none}
+#soloHint.on{display:block;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom,0px));width:max-content;max-width:calc(100vw - 24px);z-index:30;pointer-events:none;padding:9px 16px;background:#08203a;border:1px solid var(--accent2);border-radius:8px;color:var(--text,#fff)}   /* floating over the hand, like the toast: the layout never moves */
+@media(min-width:900px){#pane-solo{padding-bottom:12px}}
 #soloBoard{display:grid;grid-template-columns:repeat(7,var(--cw));column-gap:calc(var(--cw)*.5);row-gap:calc(var(--cw)*.3);justify-content:center;padding:calc(var(--cw)*.25) 0}
 .sz{position:relative;width:var(--cw);height:var(--ch);border:1px solid rgba(255,255,255,.3);border-radius:4px;box-sizing:border-box}
 .sz.ban{width:var(--ch);height:var(--cw);justify-self:end}
@@ -453,7 +453,6 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
   #soloBoard{column-gap:var(--cg,calc(var(--cw)*.5));row-gap:calc(var(--cw)*.14);padding:calc(var(--cw)*.1) 0}
   #soloHandBox{padding-bottom:0}
   .hand{padding:4px 6px;min-height:calc(var(--hw)*1.46 + 8px)}
-  #soloHint.on{position:fixed;left:calc(var(--sw,106px) + 16px + env(safe-area-inset-left));right:10px;top:calc(var(--hh,44px) + 6px);bottom:auto;margin:0;max-width:none;padding:4px 10px;text-align:center;background:rgba(2,16,31,.92);border:1px solid #ffd66b;border-radius:6px;z-index:30;pointer-events:none}
 }
 /* Draw Simulator: hand cards the same size as the deck cards, 5 per row, centred */
 @media(min-width:621px){
@@ -630,7 +629,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
       </section>
     </div>
   </div>
-  <div id="buildTag">Tool Version 28/11/2026 06:22</div>
+  <div id="buildTag">Tool Version 28/11/2026 07:00</div>
 </main>
 
 <main class="pane" id="pane-sim">
@@ -669,7 +668,7 @@ body.tagmode #toast,body.tagmode #warn{bottom:calc(76px + env(safe-area-inset-bo
     </div>
     <div id="soloInfo"></div>
     <div id="soloNote"></div>
-    <div id="soloHint">Choose a highlighted zone. Tap anywhere else to cancel.</div>
+    <div id="soloHint">Pick a zone</div>
   </section>
   <section class="panel" id="soloBoardWrap"><div id="soloBoard"></div></section>
   <section class="panel" style="margin-bottom:0"><div id="soloHandBox"><div class="hand" id="soloHand"></div></div></section>
@@ -2475,7 +2474,7 @@ function draw() {
   sync($('#soloHand'), S.Z.hand.map(u => ({ k: u, h: `<div class="hc" data-u="${u}">${cardEl(u)}</div>` })));
   $('#soloUndo').disabled = S.idx <= 0; $('#soloRedo').disabled = S.idx >= S.hist.length - 1;
   const ht = $('#soloHint'); ht.classList.toggle('on', !!S.pl);
-  ht.textContent = S.pl ? (S.pl.msg || 'Choose a highlighted zone (blue: a zone with a card). Tap anywhere else to cancel.') : '';
+  ht.textContent = S.pl ? (S.pl.msg || 'Pick a zone') : '';
   if (S.list) openList(S.list);
   if (was) FX.run(was, now, skip, shuf);
   FX.remember(now);
@@ -2590,7 +2589,7 @@ async function saveReplay() {
     const when = new Date().toLocaleString([], { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
     const rec = { id: Date.now(), at: Date.now(), pin: false, name: (state.name || 'Untitled') + ' · ' + when, steps: S.hist.slice(0, S.idx + 1).map(h => ({ t: h.t, s: h.s })), cards };
     const nm = await askSave(rec.steps.length - 1, rec.name); if (nm === null) return; rec.name = nm;
-    rPut(rec).then(prune).then(() => toast('Replay saved.')).catch(() => { });
+    rPut(rec).then(prune).then(() => toast('Replay saved')).catch(() => { });
   } catch (e) { }
 }
 const rpIcon = playing => { $('#rpIcP').src = playing ? IC.z : IC.p; $('#rpPlay').setAttribute('aria-label', playing ? 'Pause' : 'Play'); };
@@ -2612,7 +2611,7 @@ function rpPlay() {
 }
 async function openReplay(id) {
   let rec; try { rec = (await rAll()).find(r => r.id === id); } catch (e) { }
-  if (!rec) { toast('Replay not found.'); return; }
+  if (!rec) { toast('Replay not found'); return; }
   $('#soloLog').classList.remove('on'); closeList(); closeMenu();
   if (!R.on) R.bak = { C: S.C, Z: S.Z, P: S.P, M: S.M, pl: S.pl };
   S.pl = null; R.on = true; R.rec = rec; R.i = 0; S.list = null;
@@ -2650,15 +2649,16 @@ $('#soloLog').addEventListener('click', async e => {
     if (k === 'pin') { rec.pin = !rec.pin; await rPut(rec); }
     else if (k === 'ren') { const n = prompt('Replay name', rec.name); if (n === null || !n.trim()) return; rec.name = n.trim().slice(0, 80); await rPut(rec); }
     else if (k === 'del') { if (!confirm('Delete this replay?')) return; await rDel(id); }
-  } catch (err) { toast('Could not update the replay.'); }
+  } catch (err) { toast('Update failed'); }
   openReplays();
 });
 
 /* ----- card actions ----- */
 function toZone(u, to, pos, verb) {
   const c = cc(u), L = remove(u), a = S.Z, mm = mats(u);
+  if (to === 'gy') a.gy.unshift(u);                       // a stack falls top card first: each later card lands on the one before it
   if (mm.length) { mm.forEach(m => { a.gy.unshift(m); S.P[m] = 'u'; }); delete S.M[u]; verb += ` (${mm.length} Material${mm.length > 1 ? 's' : ''} → GY)`; }
-  if (to === 'hand') a.hand.unshift(u); else if (to === 'gy') a.gy.unshift(u); else if (to === 'ban') a.ban.unshift(u);
+  if (to === 'hand') a.hand.unshift(u); else if (to === 'ban') a.ban.unshift(u);
   else if (to === 'dtop') a.deck.unshift(u); else if (to === 'dbot') a.deck.push(u); else if (to === 'extra') a.extra[pos === 'x' ? 'unshift' : 'push'](u);
   S.P[u] = pos || 'u';
   commit(`${verb}: ${c.name} [${zn(L)}]`);
@@ -2692,7 +2692,7 @@ function validZones(u, kind, grp) {                       // grp: 'mon' = monste
   return v;
 }
 function startPlace(u, kind, pos, lab, grp) {              // pos/lab: the position was already chosen (Place flow: position first, then the zone)
-  const v = validZones(u, kind, grp); if (!v.length) { toast('No empty zone available.'); return; }
+  const v = validZones(u, kind, grp); if (!v.length) { toast('No empty zone'); return; }
   const back = S.list ? { z: S.list, top: $('#soloListBox').scrollTop } : null;
   S.pl = { u, kind, pos, lab, back, v: new Set(v) }; closeList(); closeMenu(); draw();
 }
@@ -2734,10 +2734,10 @@ function finishPlace(z, i) {
 /* ----- Token ----- */
 const MZ = ['mmz', 'emz'];
 function startToken() {
-  if (!S.Z.mmz.some(o => !o)) { toast('No Empty Main Monster Zone.'); return; }
+  if (!S.Z.mmz.some(o => !o)) { toast('Monster Zones full'); return; }
   closeList();
   showMenu({ t: 'Token' }, [['Face-up ⚔︎', 'u'], ['Face-up ⛨', 'd']].map(x => [x[0], () => {
-    S.pl = { kind: 'token', pos: x[1], v: new Set(S.Z.mmz.map((o, i) => o ? null : 'mmz:' + i).filter(Boolean)), msg: 'Choose a Main Monster Zone for the Token. Tap anywhere else to cancel.' }; draw();
+    S.pl = { kind: 'token', pos: x[1], v: new Set(S.Z.mmz.map((o, i) => o ? null : 'mmz:' + i).filter(Boolean)), msg: 'Pick a Monster Zone' }; draw();
   }]));
 }
 function finishToken(z, i) {
@@ -2781,8 +2781,8 @@ function deckMenu() {
     ['View', () => openList('deck')], ['Banish Top Card', () => banMenu(top(), deckMenu), 1],
     ['Send Top Card To GY', () => toZone(top(), 'gy', 'u', 'To GY (Top Of Deck)')]]);
 }
-function drawCard() { if (!S.Z.deck.length) { toast('The deck is empty.'); return; } const u = S.Z.deck.shift(); S.Z.hand.unshift(u); S.P[u] = 'u'; commit('Draw: ' + cc(u).name); }
-function shuffle() { if (S.Z.deck.length < 2) { toast('Not enough cards in the deck to shuffle.'); return; } shuffleArr(S.Z.deck); FX.shuf = 'deck'; commit('Shuffle Deck'); }
+function drawCard() { if (!S.Z.deck.length) { toast('Deck is empty'); return; } const u = S.Z.deck.shift(); S.Z.hand.unshift(u); S.P[u] = 'u'; commit('Draw: ' + cc(u).name); }
+function shuffle() { if (S.Z.deck.length < 2) { toast("Can't shuffle"); return; } shuffleArr(S.Z.deck); FX.shuf = 'deck'; commit('Shuffle Deck'); }
 
 /* ----- game: the deck always comes from the Deck Builder ----- */
 const deckEnts = () => (state.entries || []).filter(e => (e.zone === 'main' || e.zone === 'extra') && e.qty > 0);
@@ -2800,7 +2800,7 @@ function setNote() {
 async function newGame() {
   if (S.loading) return;
   const ents = deckEnts();
-  if (!ents.length) { toast('Build a deck in the Deck Builder first.'); setNote(); return; }
+  if (!ents.length) { toast('Build a deck first'); setNote(); return; }
   await saveReplay();
   S.loading = true; setNote();
   try { await preload(ents.map(e => e.card)); } catch (e) { }
@@ -2825,7 +2825,7 @@ pane.addEventListener('click', async e => {
     const k = b.dataset.b;
     if (k === 'new') { if (S.started && S.idx > 0 && !confirm('Start a new game? The current board will be lost.')) return; newGame(); return; }
     if (!S.started) return;
-    if (k === 'reset') { if (S.hist.length < 2) return; if (!confirm('Reset to the start of this game?')) return; await saveReplay(); S.hist.length = 1; restore(0); toast('Reset to the start of the game'); }
+    if (k === 'reset') { if (S.hist.length < 2) return; if (!confirm('Reset to the start of this game?')) return; await saveReplay(); S.hist.length = 1; restore(0); toast('Game reset'); }
     else if (k === 'draw') drawCard(); else if (k === 'shuffle') shuffle(); else if (k === 'token') startToken(); else if (k === 'undo') { if (S.idx > 0) restore(S.idx - 1, true); }
     else if (k === 'redo') { if (S.idx < S.hist.length - 1) restore(S.idx + 1, true); } else if (k === 'log') openLog();
     return;
